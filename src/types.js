@@ -777,49 +777,28 @@ function intrinsic_createAccessor(O, P, Get, Set, Enumerable, Configurable) {
     });
 }
 
-// TODO compatible to ES8
 function intrinsic_enumerator(O, ownOnly, enumerableOnly) {
-    var names = Object.keys(O.properties);
-    if (ownOnly !== true) {
-        var all = Object.create(null);
-        var proto = O;
-        while (proto !== null) {
-            for (var P in proto.properties) {
-                var desc = proto.properties[P];
-                if (enumerableOnly === false || desc.Enumerable === true) {
-                    all[P] = P;
-                }
-            }
-            proto = proto.Prototype;
-        }
-        var names = Object.keys(all);
-    }
-    var i = 0;
-    var next = function() {
-        while (true) {
-            var P = names[i++];
-            if (P === undefined) return undefined;
-            var desc = O.properties[P];
-            if (desc === undefined) {
-                if (ownOnly === true) {
-                    continue;
-                }
-                var proto = O.Prototype;
-                while (proto !== null) {
+    var iterator = (function*() {
+            var visited = Object.create(null);
+            var proto = O;
+            while (proto !== null) {
+                for (var P of Object.keys(proto.properties)) {
+                    if (visited[P]) continue;
                     var desc = proto.properties[P];
-                    if (desc !== undefined) {
-                        break;
+                    if (!desc) continue;
+                    visited[P] = true;
+                    if (enumerableOnly === false || desc.Enumerable === true) {
+                        yield P;
                     }
-                    proto = proto.Prototype;
                 }
-                if (desc === undefined) {
-                    continue;
-                }
+                if (ownOnly) break;
+                proto = proto.Prototype;
             }
-            if (enumerableOnly === false || desc.Enumerable === true) return P;
         }
-    }
-    return next;
+    })();
+return function() {
+    return iterator.next().value;
+};
 }
 
 function define(obj, name, value) {
