@@ -146,6 +146,11 @@ async function ToUint32(input) {
     return (number >>> 0);
 }
 
+function _ToUint32(input) {
+    assert(typeof input === "number", input);
+    return (number >>> 0);
+}
+
 async function ToUint16(input) {
     var number = await ToNumber(input);
     return ((number >>> 0) & 0xffff);

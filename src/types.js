@@ -62,7 +62,7 @@ function setAlltheInternalMethod(Class) {
     clz.HasProperty = default_HasProperty;
     clz.Delete = default_Delete;
     clz.DefaultValue = default_DefaultValue; // async
-    clz.DefineOwnProperty = default_DefineOwnProperty;
+    clz.DefineOwnProperty = default_DefineOwnProperty; // async
     clz.enumerator = default_enumerator;
     return clz;
 }
@@ -379,25 +379,25 @@ function IsGenericDescriptor(Desc) {
     return false;
 }
 
-function FromPropertyDescriptor(Desc) {
+async function FromPropertyDescriptor(Desc) {
     if (Desc === undefined) return undefined;
-    var obj = intrinsic_Object();
+    var obj = await Object_Construct([]);
     if (IsDataDescriptor(Desc) === true) {
         assert(Desc.Value !== absent, Desc);
         assert(Desc.Writable !== absent, Desc);
-        obj.DefineOwnProperty("value", DataPropertyDescriptor(Desc.Value, true, true, true), false);
-        obj.DefineOwnProperty("writable", DataPropertyDescriptor(Desc.Writable, true, true, true), false);
+        await obj.DefineOwnProperty("value", DataPropertyDescriptor(Desc.Value, true, true, true), false);
+        await obj.DefineOwnProperty("writable", DataPropertyDescriptor(Desc.Writable, true, true, true), false);
     } else {
         assert(IsAccessorDescriptor(Desc), Desc);
         assert(Desc.Get !== absent, Desc);
         assert(Desc.Set !== absent, Desc);
-        obj.DefineOwnProperty("get", DataPropertyDescriptor(Desc.Get, true, true, true), false);
-        obj.DefineOwnProperty("set", DataPropertyDescriptor(Desc.Set, true, true, true), false);
+        await obj.DefineOwnProperty("get", DataPropertyDescriptor(Desc.Get, true, true, true), false);
+        await obj.DefineOwnProperty("set", DataPropertyDescriptor(Desc.Set, true, true, true), false);
     }
     assert(Desc.Enumerable !== absent, Desc);
     assert(Desc.Configurable !== absent, Desc);
-    obj.DefineOwnProperty("enumerable", DataPropertyDescriptor(Desc.Enumerable, true, true, true), false);
-    obj.DefineOwnProperty("configurable", DataPropertyDescriptor(Desc.Configurable, true, true, true), false);
+    await obj.DefineOwnProperty("enumerable", DataPropertyDescriptor(Desc.Enumerable, true, true, true), false);
+    await obj.DefineOwnProperty("configurable", DataPropertyDescriptor(Desc.Configurable, true, true, true), false);
     return obj;
 }
 
@@ -530,7 +530,7 @@ async function default_Put(P, V, Throw) {
             else return;
         }
         var valueDesc = DataPropertyDescriptor(V, absent, absent, absent);
-        O.DefineOwnProperty(P, valueDesc, Throw);
+        await O.DefineOwnProperty(P, valueDesc, Throw);
         return;
     }
     if (O.CanPut(P) === false) {
@@ -544,7 +544,7 @@ async function default_Put(P, V, Throw) {
         return setter.Call(O, [V]);
     } else {
         var newDesc = DataPropertyDescriptor(V, true, true, true);
-        O.DefineOwnProperty(P, newDesc, Throw);
+        await O.DefineOwnProperty(P, newDesc, Throw);
     }
     return;
 }
@@ -629,7 +629,7 @@ async function default_DefaultValue(hint) {
 
 const emptyPropertyDescriptor = FullPropertyDescriptor(absent, absent, absent, absent, absent, absent);
 
-function default_DefineOwnProperty(P, Desc, Throw) {
+async function default_DefineOwnProperty(P, Desc, Throw) {
     var O = this;
     var current = O.GetOwnProperty(P);
     var extensible = O.Extensible;
@@ -779,26 +779,25 @@ function intrinsic_createAccessor(O, P, Get, Set, Enumerable, Configurable) {
 
 function intrinsic_enumerator(O, ownOnly, enumerableOnly) {
     var iterator = (function*() {
-            var visited = Object.create(null);
-            var proto = O;
-            while (proto !== null) {
-                for (var P of Object.keys(proto.properties)) {
-                    if (visited[P]) continue;
-                    var desc = proto.properties[P];
-                    if (!desc) continue;
-                    visited[P] = true;
-                    if (enumerableOnly === false || desc.Enumerable === true) {
-                        yield P;
-                    }
+        var visited = Object.create(null);
+        var proto = O;
+        while (proto !== null) {
+            for (var P of Object.keys(proto.properties)) {
+                if (visited[P]) continue;
+                var desc = proto.properties[P];
+                if (!desc) continue;
+                visited[P] = true;
+                if (enumerableOnly === false || desc.Enumerable === true) {
+                    yield P;
                 }
-                if (ownOnly) break;
-                proto = proto.Prototype;
             }
+            if (ownOnly) break;
+            proto = proto.Prototype;
         }
     })();
-return function() {
-    return iterator.next().value;
-};
+    return function() {
+        return iterator.next().value;
+    };
 }
 
 function define(obj, name, value) {
