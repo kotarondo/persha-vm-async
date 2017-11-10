@@ -88,7 +88,6 @@ async function Array_prototype_toLocaleString(thisValue, argumentsList) {
         var func = await elementObj.Get("toLocaleString");
         if (IsCallable(func) === false) throw VMTypeError();
         // specification Bug 62
-        //var R = func.Call(elementObj, []);
         var R = await func.Call(firstElement, []);
         var R = await ToString(R);
         // end of bug fix
@@ -104,7 +103,6 @@ async function Array_prototype_toLocaleString(thisValue, argumentsList) {
             var func = await elementObj.Get("toLocaleString");
             if (IsCallable(func) === false) throw VMTypeError();
             // specification Bug 62
-            //var R = func.Call(elementObj, []);
             var R = await func.Call(nextElement, []);
             var R = await ToString(R);
             // end of bug fix
@@ -189,7 +187,6 @@ async function Array_prototype_pop(thisValue, argumentsList) {
         var element = await O.Get(indx);
         O.Delete(indx, true);
         // specification Bug 162
-        // O.Put("length", indx, true);
         await O.Put("length", len - 1, true);
         // end of bug fix
         return element;

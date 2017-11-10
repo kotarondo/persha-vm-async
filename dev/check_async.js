@@ -106,19 +106,19 @@ for (var code of codes) {
         }
         if (e[0] === '(') {
             name = split[i - 1];
-            if (name === 'call') {
+            if (name === 'call' || name === 'apply') {
                 assert(split[i - 2] === '.');
                 i -= 2;
                 name = split[i - 1];
             }
             if (split[i - 2] === '.') {
                 if (async_methods[name]) {
+//console.log(filename, name, line);
                     while(split[i - 4] === '.'){
                         i-=2;
                     }
-                    if(split[i - 4] === ' '){
-                        assert(split[i - 5] === 'await' || split[i - 5] === 'return');
-                    }
+                    assert(split[i - 4] === ' ');
+                    assert(split[i - 5] === 'await' || split[i - 5] === 'return');
                 } else {
                     assert(split[i - 5] !== 'await');
                 }
