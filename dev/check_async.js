@@ -38,6 +38,7 @@ var vm = require('vm');
 var filenames = fs.readdirSync(path.join(__dirname, '..', 'src'));
 
 var name, line;
+
 function assert(exp) {
     if (exp) return;
     console.log(filename, line, name);
@@ -49,7 +50,7 @@ var async_functions = Object.create(null);
 var unknown_functions = Object.create(null);
 
 for (var filename of filenames) {
-    if(!/\.js$/.test(filename)) continue;
+    if (!/\.js$/.test(filename)) continue;
     var text = fs.readFileSync(path.join(__dirname, '..', 'src', filename), 'utf8');
     var split = text.split(/\b|(?=\n)/);
     line = 0;
@@ -92,10 +93,10 @@ for (var code of codes) {
             assert(!sync_functions[name]);
             if (async_functions[name]) {
                 assert(split[i + 3][0] === '(' || (split[i + 3] === '.' && split[i + 4] === 'call'));
-            }else if(split[i + 3] === '.'){
+            } else if (split[i + 3] === '.') {
                 name = split[i + 4];
-                while(split[i + 5] === '.'){
-                    i+=2;
+                while (split[i + 5] === '.') {
+                    i += 2;
                     name = split[i + 4];
                 }
                 assert(async_methods[name]);
@@ -113,9 +114,8 @@ for (var code of codes) {
             }
             if (split[i - 2] === '.') {
                 if (async_methods[name]) {
-//console.log(filename, name, line);
-                    while(split[i - 4] === '.'){
-                        i-=2;
+                    while (split[i - 4] === '.') {
+                        i -= 2;
                     }
                     assert(split[i - 4] === ' ');
                     assert(split[i - 5] === 'await' || split[i - 5] === 'return');
