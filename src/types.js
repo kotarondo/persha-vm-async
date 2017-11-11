@@ -296,7 +296,7 @@ async function PutValue(V, W) {
         }
     } else {
         assert(Type(base) === TYPE_EnvironmentRecord, base);
-        base.SetMutableBinding(V.referencedName, W, V.strictReference);
+        await base.SetMutableBinding(V.referencedName, W, V.strictReference);
     }
     return;
 }

@@ -35,6 +35,19 @@ var fs = require('fs');
 var path = require('path');
 var vm = require('vm');
 
+var async_methods = {
+    Get: true,
+    Put: true,
+    DefineOwnProperty: true,
+    DefaultValue: true,
+    Call: true,
+    Construct: true,
+    evaluate: true,
+    CreateMutableBinding: true,
+    SetMutableBinding: true,
+    GetBindingValue: true,
+};
+
 var filenames = fs.readdirSync(path.join(__dirname, '..', 'src'));
 
 var name, line;
@@ -70,15 +83,6 @@ for (var filename of filenames) {
     });
     codes.push({ filename, text, split });
 }
-
-var async_methods = {
-    Get: true,
-    Put: true,
-    DefineOwnProperty: true,
-    DefaultValue: true,
-    Call: true,
-    Construct: true,
-};
 
 for (var code of codes) {
     var { filename, text, split } = code;

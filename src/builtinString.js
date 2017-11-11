@@ -451,7 +451,7 @@ async function String_prototype_toLowerCase(thisValue, argumentsList) {
     var S = await ToString(thisValue);
     var buffer = [];
     for (var i = 0; i < S.length; i++) {
-        buffer[i] = unicodeToLowerCase(S[i]) || S[i];
+        buffer[i] = unicodeToLowerCase[S[i]] || S[i];
     }
     return buffer.join('');
 }
@@ -466,7 +466,7 @@ async function String_prototype_toUpperCase(thisValue, argumentsList) {
     var S = await ToString(thisValue);
     var buffer = [];
     for (var i = 0; i < S.length; i++) {
-        buffer[i] = unicodeToUpperCase(S[i]) || S[i];
+        buffer[i] = unicodeToUpperCase[S[i]] || S[i];
     }
     return buffer.join('');
 }
