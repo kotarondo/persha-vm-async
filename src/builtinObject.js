@@ -74,14 +74,13 @@ async function Object_getOwnPropertyDescriptor(thisValue, argumentsList) {
 
 async function Object_getOwnPropertyNames(thisValue, argumentsList) {
     var O = argumentsList[0];
-    var P = argumentsList[1];
     if (Type(O) !== TYPE_Object) throw VMTypeError();
-    var array = await Array_Construct([]);
-    var n = 0;
     var next = O.enumerator(true, false);
-    var name;
-    while ((name = next()) !== undefined) {
-        await array.DefineOwnProperty(n, DataPropertyDescriptor(name, true, true, true), false);
+    var array = intrinsic_Array();
+    var n = 0;
+    var P;
+    while ((P = next()) !== undefined) {
+        await array.DefineOwnProperty(n, DataPropertyDescriptor(P, true, true, true), false);
         n++;
     }
     return array;
@@ -209,13 +208,12 @@ async function Object_keys(thisValue, argumentsList) {
     var O = argumentsList[0];
     if (Type(O) !== TYPE_Object) throw VMTypeError();
     var next = O.enumerator(true, true);
-    var n = next.length;
-    var array = await Array_Construct([n]);
-    var index = 0;
+    var array = intrinsic_Array();
+    var n = 0;
     var P;
     while ((P = next()) !== undefined) {
-        await array.DefineOwnProperty(index, DataPropertyDescriptor(P, true, true, true), false);
-        index++;
+        await array.DefineOwnProperty(n, DataPropertyDescriptor(P, true, true, true), false);
+        n++;
     }
     return array;
 }

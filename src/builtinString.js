@@ -162,7 +162,7 @@ async function String_prototype_match(thisValue, argumentsList) {
     if (global !== true) return RegExp_prototype_exec(rx, [S]);
     else {
         await rx.Put("lastIndex", 0);
-        var A = await Array_Construct([]);
+        var A = intrinsic_Array();
         var previousLastIndex = 0;
         var n = 0;
         var lastMatch = true;
@@ -359,7 +359,7 @@ async function String_prototype_split(thisValue, argumentsList) {
     var limit = argumentsList[1];
     CheckObjectCoercible(thisValue);
     var S = await ToString(thisValue);
-    var A = await Array_Construct([]);
+    var A = intrinsic_Array();
     var lengthA = 0;
     if (limit === undefined) {
         var lim = 0xffffffff;

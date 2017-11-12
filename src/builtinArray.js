@@ -60,6 +60,14 @@ async function Array_Construct(argumentsList) {
     return obj;
 }
 
+function intrinsic_Array() {
+    var obj = VMObject(Class_Array);
+    obj.Prototype = realm.Array_prototype;
+    obj.Extensible = true;
+    defineWritable(obj, "length", 0);
+    return obj;
+}
+
 async function Array_isArray(thisValue, argumentsList) {
     var arg = argumentsList[0];
     if (Type(arg) !== TYPE_Object) return false;
@@ -115,7 +123,7 @@ async function Array_prototype_toLocaleString(thisValue, argumentsList) {
 
 async function Array_prototype_concat(thisValue, argumentsList) {
     var O = await ToObject(thisValue);
-    var A = await Array_Construct([]);
+    var A = intrinsic_Array();
     var n = 0;
     var items = [O].concat(argumentsList);
     for (var i = 0; i < items.length; i++) {
@@ -267,7 +275,7 @@ async function Array_prototype_slice(thisValue, argumentsList) {
     var start = argumentsList[0];
     var end = argumentsList[1];
     var O = await ToObject(thisValue);
-    var A = await Array_Construct([]);
+    var A = intrinsic_Array();
     var lenVal = await O.Get("length");
     var len = await ToUint32(lenVal);
     var relativeStart = await ToInteger(start);
@@ -386,7 +394,7 @@ async function Array_prototype_splice(thisValue, argumentsList) {
     var start = argumentsList[0];
     var deleteCount = argumentsList[1];
     var O = await ToObject(thisValue);
-    var A = await Array_Construct([]);
+    var A = intrinsic_Array();
     var lenVal = await O.Get("length");
     var len = await ToUint32(lenVal);
     var relativeStart = await ToInteger(start);
@@ -668,7 +676,7 @@ async function Array_prototype_filter(thisValue, argumentsList) {
     } else {
         var T = undefined;
     }
-    var A = await Array_Construct([]);
+    var A = intrinsic_Array();
     var k = 0;
     var to = 0;
     while (k < len) {

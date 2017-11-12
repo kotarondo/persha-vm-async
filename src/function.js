@@ -81,7 +81,7 @@ function CreateFunction(body, Scope) {
     return F;
 }
 
-function delayedFunctionBody(F, ThisBinding, argumentsList) {
+async function delayedFunctionBody(F, ThisBinding, argumentsList) {
     var ctx = new CompilerContext("F, ThisBinding, argumentsList");
     try {
         compileDeclarationBindingInstantiation0(ctx, F.Code);
@@ -97,7 +97,7 @@ function delayedFunctionBody(F, ThisBinding, argumentsList) {
     }
     var evaluate = ctx.finish();
     F.Code.evaluate = evaluate;
-    return evaluate(F, ThisBinding, argumentsList);
+    return await evaluate(F, ThisBinding, argumentsList);
 }
 
 async function Function_ClassCall(thisValue, argumentsList) {

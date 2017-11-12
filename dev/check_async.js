@@ -66,7 +66,7 @@ var unknown_functions = Object.create(null);
 for (var filename of filenames) {
     if (!/\.js$/.test(filename)) continue;
     var text = fs.readFileSync(path.join(__dirname, '..', 'src', filename), 'utf8');
-    var split = text.split(/\b|(?=\n)/);
+    var split = text.split(/\b|(?=\n)|(?=")|(?=\.)/);
     line = 0;
     split.forEach(function(e, i) {
         if (e[0] === '\n') line++;
@@ -92,8 +92,16 @@ for (var code of codes) {
         if (e[0] === '\n') line++;
         if (e === 'await') {
             name = e;
-            name = split[i + 2];
             assert(split[i + 1] === ' ');
+            name = split[i + 2];
+            if (name[0] === '"') {
+                var start = i;
+                while (split[i + 3] !== '"') {
+                    i++;
+                }
+                i++;
+                name = split.slice(start + 2, i + 3).join('');
+            }
             assert(!sync_functions[name]);
             if (async_functions[name]) {
                 assert(split[i + 3][0] === '(' || (split[i + 3] === '.' && split[i + 4] === 'call'));
@@ -120,6 +128,12 @@ for (var code of codes) {
                 if (async_methods[name]) {
                     while (split[i - 4] === '.') {
                         i -= 2;
+                    }
+                    if (split[i - 3] === '"') {
+                        while (split[i - 4][0] !== '"') {
+                            i--;
+                        }
+                        i--;
                     }
                     assert(split[i - 4] === ' ');
                     assert(split[i - 5] === 'await');
