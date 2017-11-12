@@ -237,7 +237,7 @@ async function Error_prototype_getStackTraceEntry(thisValue, argumentsList) {
     var pos = stackTrace[index].pos;
     var info = {};
     Parser.locateDebugInfo(code, pos, info);
-    var obj = await Object_Construct([]);
+    var obj = intrinsic_Object();
     define(obj, "functionObject", func);
     define(obj, "functionName", info.functionName);
     define(obj, "filename", info.filename);

@@ -35,7 +35,7 @@
 
 async function ToPrimitive(input, hint) {
     if (typeof input === "object" && input !== null) {
-        return input.DefaultValue(hint);
+        return await input.DefaultValue(hint);
     }
     return input;
 }
@@ -51,7 +51,7 @@ async function ToNumber(input) {
                 return 0;
             }
             input = await input.DefaultValue(TYPE_Number);
-            return ToNumber(input);
+            return await ToNumber(input);
         case "string":
             return ToNumberFromString(input);
     }
@@ -167,11 +167,11 @@ async function ToString(input) {
 async function ToObject(input) {
     switch (typeof input) {
         case "boolean":
-            return Boolean_Construct([input]);
+            return await Boolean_Construct([input]);
         case "number":
-            return Number_Construct([input]);
+            return await Number_Construct([input]);
         case "string":
-            return String_Construct([input]);
+            return await String_Construct([input]);
     }
     if (!input) throw VMTypeError();
     return input;

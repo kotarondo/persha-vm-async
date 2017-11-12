@@ -36,7 +36,7 @@
 async function String_Call(thisValue, argumentsList) {
     var value = argumentsList[0];
     if (argumentsList.length === 0) return "";
-    return ToString(value);
+    return await ToString(value);
 }
 
 async function String_Construct(argumentsList) {
@@ -59,7 +59,7 @@ async function String_fromCharCode(thisValue, argumentsList) {
 }
 
 async function String_prototype_toString(thisValue, argumentsList) {
-    return String_prototype_valueOf(thisValue);
+    return await String_prototype_valueOf(thisValue);
 }
 
 async function String_prototype_valueOf(thisValue, argumentsList) {
@@ -458,7 +458,7 @@ async function String_prototype_toLowerCase(thisValue, argumentsList) {
 
 async function String_prototype_toLocaleLowerCase(thisValue, argumentsList) {
     // avoid non-deterministic behaviour
-    return String_prototype_toLowerCase(thisValue, argumentsList);
+    return await String_prototype_toLowerCase(thisValue, argumentsList);
 }
 
 async function String_prototype_toUpperCase(thisValue, argumentsList) {
@@ -473,7 +473,7 @@ async function String_prototype_toUpperCase(thisValue, argumentsList) {
 
 async function String_prototype_toLocaleUpperCase(thisValue, argumentsList) {
     // avoid non-deterministic behaviour
-    return String_prototype_toUpperCase(thisValue, argumentsList);
+    return await String_prototype_toUpperCase(thisValue, argumentsList);
 }
 
 async function String_prototype_trim(thisValue, argumentsList) {
@@ -534,7 +534,7 @@ function String_enumerator(ownOnly, enumerableOnly) {
     var i = 0;
     var len = str.length;
     return function() {
-        if (i < len) return ToString(i++);
+        if (i < len) return String(i++);
         return next();
     };
 }
@@ -547,7 +547,7 @@ async function String_FastGet(P) {
         var len = str.length;
         if (index < len) return str[index];
     }
-    return default_Get.call(O, P);
+    return await default_Get.call(O, P);
 }
 
 async function String_FastPut(P, V, Throw) {
@@ -561,5 +561,5 @@ async function String_FastPut(P, V, Throw) {
             else return;
         }
     }
-    return default_Put.call(O, P, V, Throw);
+    return await default_Put.call(O, P, V, Throw);
 }

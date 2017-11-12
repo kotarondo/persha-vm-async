@@ -82,7 +82,7 @@ const Class_BuiltinFunction = (function() {
     clz.Get = Function_Get;
     clz.Call = undefined; // async
     clz.Construct = undefined; // async
-    clz.HasInstance = Function_HasInstance;
+    clz.HasInstance = Function_HasInstance; // async
     return clz;
 })();
 
@@ -91,9 +91,9 @@ const Class_Function = (function() {
     clz.GetProperty = default_FastGetProperty;
     clz.Put = default_FastPut;
     clz.Get = Function_Get;
-    clz.Call = Function_ClassCall;
-    clz.Construct = Function_ClassConstruct;
-    clz.HasInstance = Function_HasInstance;
+    clz.Call = Function_ClassCall; // async
+    clz.Construct = Function_ClassConstruct; // async
+    clz.HasInstance = Function_HasInstance; // async
     clz.Scope = undefined;
     clz.Code = undefined;
     return clz;
@@ -104,9 +104,9 @@ const Class_BindFunction = (function() {
     clz.GetProperty = default_FastGetProperty;
     clz.Put = default_FastPut;
     clz.Get = Function_Get;
-    clz.Call = BindFunction_ClassCall;
-    clz.Construct = BindFunction_ClassConstruct;
-    clz.HasInstance = BindFunction_HasInstance;
+    clz.Call = BindFunction_ClassCall; // async
+    clz.Construct = BindFunction_ClassConstruct; // async
+    clz.HasInstance = BindFunction_HasInstance; // async
     clz.TargetFunction = undefined;
     clz.BoundThis = undefined;
     clz.BoundArgs = undefined;
@@ -261,11 +261,11 @@ async function GetValue(V) {
         throw VMReferenceError(V.referencedName + " is not defined");
     }
     if (IsPropertyReference(V)) {
-        if (HasPrimitiveBase(V) === false) return base.Get(V.referencedName);
-        else return specialGet(base, V.referencedName);
+        if (HasPrimitiveBase(V) === false) return await base.Get(V.referencedName);
+        else return await specialGet(base, V.referencedName);
     } else {
         assert(Type(base) === TYPE_EnvironmentRecord, base);
-        return base.GetBindingValue(V.referencedName, V.strictReference);
+        return await base.GetBindingValue(V.referencedName, V.strictReference);
     }
 }
 
@@ -278,7 +278,7 @@ async function specialGet(base, P) {
         assert(IsAccessorDescriptor(desc), desc);
         var getter = desc.Get;
         if (getter === undefined) return undefined;
-        return getter.Call(base, []);
+        return await getter.Call(base, []);
     }
 }
 
@@ -287,12 +287,12 @@ async function PutValue(V, W) {
     var base = V.base;
     if (IsUnresolvableReference(V)) {
         if (V.strictReference === true) throw VMReferenceError(V.referencedName + " is not defined");
-        return realm.theGlobalObject.Put(V.referencedName, W, false);
+        return await realm.theGlobalObject.Put(V.referencedName, W, false);
     } else if (IsPropertyReference(V)) {
         if (HasPrimitiveBase(V) === false) {
-            return base.Put(V.referencedName, W, V.strictReference);
+            return await base.Put(V.referencedName, W, V.strictReference);
         } else {
-            return specialPut(base, V.referencedName, W, V.strictReference);
+            return await specialPut(base, V.referencedName, W, V.strictReference);
         }
     } else {
         assert(Type(base) === TYPE_EnvironmentRecord, base);
@@ -315,7 +315,7 @@ async function specialPut(base, P, W, Throw) {
     var desc = O.GetProperty(P);
     if (IsAccessorDescriptor(desc) === true) {
         var setter = desc.Set;
-        return setter.Call(base, [W]);
+        return await setter.Call(base, [W]);
     } else if (Throw === true) throw VMTypeError();
     return;
 }
@@ -379,25 +379,25 @@ function IsGenericDescriptor(Desc) {
     return false;
 }
 
-async function FromPropertyDescriptor(Desc) {
+function FromPropertyDescriptor(Desc) {
     if (Desc === undefined) return undefined;
-    var obj = await Object_Construct([]);
+    var obj = intrinsic_Object();
     if (IsDataDescriptor(Desc) === true) {
         assert(Desc.Value !== absent, Desc);
-        assert(Desc.Writable !== absent, Desc);
-        await obj.DefineOwnProperty("value", DataPropertyDescriptor(Desc.Value, true, true, true), false);
-        await obj.DefineOwnProperty("writable", DataPropertyDescriptor(Desc.Writable, true, true, true), false);
+        assert(typeof Desc.Writable === "boolean", Desc);
+        intrinsic_createData(obj, "value", Desc.Value, true, true, true);
+        intrinsic_createData(obj, "writable", Desc.Writable, true, true, true);
     } else {
         assert(IsAccessorDescriptor(Desc), Desc);
         assert(Desc.Get !== absent, Desc);
         assert(Desc.Set !== absent, Desc);
-        await obj.DefineOwnProperty("get", DataPropertyDescriptor(Desc.Get, true, true, true), false);
-        await obj.DefineOwnProperty("set", DataPropertyDescriptor(Desc.Set, true, true, true), false);
+        intrinsic_createData(obj, "get", Desc.Get, true, true, true);
+        intrinsic_createData(obj, "set", Desc.Set, true, true, true);
     }
-    assert(Desc.Enumerable !== absent, Desc);
-    assert(Desc.Configurable !== absent, Desc);
-    await obj.DefineOwnProperty("enumerable", DataPropertyDescriptor(Desc.Enumerable, true, true, true), false);
-    await obj.DefineOwnProperty("configurable", DataPropertyDescriptor(Desc.Configurable, true, true, true), false);
+    assert(typeof Desc.Enumerable === "boolean", Desc);
+    assert(typeof Desc.Configurable === "boolean", Desc);
+    intrinsic_createData(obj, "enumerable", Desc.Enumerable, true, true, true);
+    intrinsic_createData(obj, "configurable", Desc.Configurable, true, true, true);
     return obj;
 }
 
@@ -473,7 +473,7 @@ async function default_Get(P) {
         assert(IsAccessorDescriptor(desc), desc);
         var getter = desc.Get;
         if (getter === undefined) return undefined;
-        return getter.Call(O, []);
+        return await getter.Call(O, []);
     }
 }
 
@@ -491,7 +491,7 @@ async function default_FastGet(P) {
         assert(IsAccessorDescriptor(desc), desc);
         var getter = desc.Get;
         if (getter === undefined) return undefined;
-        return getter.Call(O, []);
+        return await getter.Call(O, []);
     }
 }
 
@@ -541,7 +541,7 @@ async function default_Put(P, V, Throw) {
     if (IsAccessorDescriptor(desc) === true) {
         var setter = desc.Set;
         assert(setter !== undefined, desc);
-        return setter.Call(O, [V]);
+        return await setter.Call(O, [V]);
     } else {
         var newDesc = DataPropertyDescriptor(V, true, true, true);
         await O.DefineOwnProperty(P, newDesc, Throw);
@@ -569,7 +569,7 @@ async function default_FastPut(P, V, Throw) {
             return;
         }
     }
-    return default_Put.call(O, P, V, Throw);
+    return await default_Put.call(O, P, V, Throw);
 }
 
 function default_HasProperty(P) {

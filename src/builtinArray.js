@@ -34,7 +34,7 @@
 // ECMAScript 5.1: 15.4 Array Objects
 
 async function Array_Call(thisValue, argumentsList) {
-    return Array_Construct(argumentsList);
+    return await Array_Construct(argumentsList);
 }
 
 async function Array_Construct(argumentsList) {
@@ -70,8 +70,8 @@ async function Array_isArray(thisValue, argumentsList) {
 async function Array_prototype_toString(thisValue, argumentsList) {
     var array = await ToObject(thisValue);
     var func = await array.Get("join");
-    if (IsCallable(func) === false) return Object_prototype_toString(array, []);
-    return func.Call(array, []);
+    if (IsCallable(func) === false) return await Object_prototype_toString(array, []);
+    return await func.Call(array, []);
 }
 
 async function Array_prototype_toLocaleString(thisValue, argumentsList) {
@@ -372,7 +372,7 @@ async function Array_prototype_sort(thisValue, argumentsList) {
         if (y === undefined) return -1;
         if (comparefn !== undefined) {
             if (IsCallable(comparefn) === false) throw VMTypeError();
-            return comparefn.Call(undefined, [x, y]);
+            return await comparefn.Call(undefined, [x, y]);
         }
         var xString = await ToString(x);
         var yString = await ToString(y);
@@ -762,11 +762,11 @@ async function Array_DefineOwnProperty(P, Desc, Throw) {
     var oldLenDesc = A.GetOwnProperty("length");
     var oldLen = oldLenDesc.Value;
     if (P === "length") {
-        if (Desc.Value === absent) return default_DefineOwnProperty.call(A, "length", Desc, Throw);
+        if (Desc.Value === absent) return await default_DefineOwnProperty.call(A, "length", Desc, Throw);
         var newLen = await ToUint32(Desc.Value);
         if (newLen !== await ToNumber(Desc.Value)) throw VMRangeError();
         var newLenDesc = DataPropertyDescriptor(newLen, Desc.Writable, Desc.Enumerable, Desc.Configurable);
-        if (newLen >= oldLen) return default_DefineOwnProperty.call(A, "length", newLenDesc, Throw);
+        if (newLen >= oldLen) return await default_DefineOwnProperty.call(A, "length", newLenDesc, Throw);
         if (oldLenDesc.Writable === false) {
             if (Throw === true) throw VMTypeError();
             else return false;
@@ -813,7 +813,7 @@ async function Array_DefineOwnProperty(P, Desc, Throw) {
         }
         return true;
     }
-    return default_DefineOwnProperty.call(A, P, Desc, Throw);
+    return await default_DefineOwnProperty.call(A, P, Desc, Throw);
 }
 
 async function Array_FastPut(P, V, Throw) {

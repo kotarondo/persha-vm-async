@@ -45,7 +45,7 @@ const Class_DeclarativeEnvironment = ({
         return false;
     },
 
-    async CreateMutableBinding: function(N, D) {
+    CreateMutableBinding: async function(N, D) {
         assert(this.attributes[N] === undefined, N);
         if (D === true) {
             this.attributes[N] = 0;
@@ -54,14 +54,14 @@ const Class_DeclarativeEnvironment = ({
         }
     },
 
-    async SetMutableBinding: function(N, V, S) {
+    SetMutableBinding: async function(N, V, S) {
         if (this.attributes[N] === undefined) return;
         if (this.attributes[N] <= 1) {
             this.values[N] = V;
         } else if (S === true) throw VMTypeError();
     },
 
-    async GetBindingValue: function(N, S) {
+    GetBindingValue: async function(N, S) {
         assert(this.attributes[N] !== undefined, N);
         if (this.attributes[N] === 3) {
             if (S === false) return undefined;
@@ -101,7 +101,7 @@ const Class_ObjectEnvironment = ({
         return bindings.HasProperty(N);
     },
 
-    async CreateMutableBinding: function(N, D) {
+    CreateMutableBinding: async function(N, D) {
         var bindings = this.bindings;
         assert(bindings.HasProperty(N) === false, N);
         if (D === true) {
@@ -112,19 +112,19 @@ const Class_ObjectEnvironment = ({
         await bindings.DefineOwnProperty(N, DataPropertyDescriptor(undefined, true, true, configValue), true);
     },
 
-    async SetMutableBinding: function(N, V, S) {
+    SetMutableBinding: async function(N, V, S) {
         var bindings = this.bindings;
         await bindings.Put(N, V, S);
     },
 
-    async GetBindingValue: function(N, S) {
+    GetBindingValue: async function(N, S) {
         var bindings = this.bindings;
         var value = bindings.HasProperty(N);
         if (value === false) {
             if (S === false) return undefined;
             throw VMReferenceError(N);
         }
-        return bindings.Get(N);
+        return await bindings.Get(N);
     },
 
     DeleteBinding: function(N) {
@@ -376,6 +376,7 @@ function compileDeclarationBindingInstantiation0(ctx, code) {
 }
 
 function CreateArgumentsObject(env, func, args) {
+    assert(Object.getPrototypeOf(env) === Class_DeclarativeEnvironment, env);
     var code = func.Code;
     var names = code.parameters;
     var strict = code.strict;
@@ -417,9 +418,9 @@ function CreateArgumentsObject(env, func, args) {
     return obj;
 }
 
-async function ArgGet(env, name) {
-    var ref = GetIdentifierReference(env, name, false);
-    return GetValue(ref);
+function ArgGet(env, name) {
+    assert(Object.getPrototypeOf(env) === Class_DeclarativeEnvironment, env);
+    return env.values[N];
 }
 
 async function ArgSet(env, name, value) {
@@ -450,7 +451,7 @@ function Arguments_GetOwnProperty(P) {
         var isMapped = map[P];
     }
     if (isMapped !== undefined) {
-        desc = DataPropertyDescriptor(await ArgGet(this.ArgumentsScope, isMapped), desc.Writable, desc.Enumerable, desc.Configurable);
+        desc = DataPropertyDescriptor(ArgGet(this.ArgumentsScope, isMapped), desc.Writable, desc.Enumerable, desc.Configurable);
     }
     return desc;
 }
@@ -514,6 +515,6 @@ async function Global_FastGetBindingValue(N, S) {
         if (getter === undefined) {
             return undefined;
         }
-        return getter.Call(binding, []);
+        return await getter.Call(binding, []);
     }
 }

@@ -35,18 +35,22 @@
 
 async function Object_Call(thisValue, argumentsList) {
     var value = argumentsList[0];
-    if (value === null || value === undefined) return Object_Construct(argumentsList);
-    return ToObject(value);
+    if (value === null || value === undefined) return await Object_Construct(argumentsList);
+    return await ToObject(value);
 }
 
 async function Object_Construct(argumentsList) {
     var value = argumentsList[0];
     if (argumentsList.length >= 1) {
         if (Type(value) === TYPE_Object) return value;
-        if (Type(value) === TYPE_String) return ToObject(value);
-        if (Type(value) === TYPE_Boolean) return ToObject(value);
-        if (Type(value) === TYPE_Number) return ToObject(value);
+        if (Type(value) === TYPE_String) return await ToObject(value);
+        if (Type(value) === TYPE_Boolean) return await ToObject(value);
+        if (Type(value) === TYPE_Number) return await ToObject(value);
     }
+    return intrinsic_Object();
+}
+
+function intrinsic_Object() {
     var obj = VMObject(Class_Object);
     obj.Prototype = realm.Object_prototype;
     obj.Extensible = true;
@@ -227,7 +231,7 @@ async function Object_prototype_toLocaleString(thisValue, argumentsList) {
     var O = await ToObject(thisValue);
     var toString = await O.Get("toString");
     if (IsCallable(toString) === false) throw VMTypeError();
-    return toString.Call(O, []);
+    return await toString.Call(O, []);
 }
 
 async function Object_prototype_valueOf(thisValue, argumentsList) {

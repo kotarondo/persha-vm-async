@@ -34,7 +34,7 @@
 // ECMAScript 5.1: 15.3 Function Objects
 
 async function Function_Call(thisValue, argumentsList) {
-    return Function_Construct(argumentsList);
+    return await Function_Construct(argumentsList);
 }
 
 async function Function_Construct(argumentsList) {
@@ -109,7 +109,7 @@ async function Function_prototype_apply(thisValue, argumentsList) {
     var thisArg = argumentsList[0];
     var argArray = argumentsList[1];
     if (IsCallable(func) === false) throw VMTypeError();
-    if (argArray === null || argArray === undefined) return func.Call(thisArg, []);
+    if (argArray === null || argArray === undefined) return await func.Call(thisArg, []);
     if (typeof argArray !== "object") throw VMTypeError();
     var len = await argArray.Get("length");
     if (typeof len === "number") {
@@ -124,7 +124,7 @@ async function Function_prototype_apply(thisValue, argumentsList) {
         argList.push(nextArg);
         index = index + 1;
     }
-    return func.Call(thisArg, argList);
+    return await func.Call(thisArg, argList);
 }
 
 async function Function_prototype_call(thisValue, argumentsList) {
@@ -137,7 +137,7 @@ async function Function_prototype_call(thisValue, argumentsList) {
             argList.push(argumentsList[i]);
         }
     }
-    return func.Call(thisArg, argList);
+    return await func.Call(thisArg, argList);
 }
 
 async function Function_prototype_bind(thisValue, argumentsList) {
@@ -173,7 +173,7 @@ async function BindFunction_ClassCall(thisValue, argumentsList) {
     var boundThis = F.BoundThis;
     var target = F.TargetFunction;
     var args = boundArgs.concat(ExtraArgs);
-    return target.Call(boundThis, args);
+    return await target.Call(boundThis, args);
 }
 
 async function BindFunction_ClassConstruct(argumentsList) {
@@ -183,14 +183,14 @@ async function BindFunction_ClassConstruct(argumentsList) {
     if (target.Construct === undefined) throw VMTypeError();
     var boundArgs = F.BoundArgs;
     var args = boundArgs.concat(ExtraArgs);
-    return target.Construct(args);
+    return await target.Construct(args);
 }
 
-function BindFunction_HasInstance(V) {
+async function BindFunction_HasInstance(V) {
     var F = this;
     var target = F.TargetFunction;
     if (target.HasInstance === undefined) throw VMTypeError();
-    return target.HasInstance(V);
+    return await target.HasInstance(V);
 }
 
 async function Function_Get(P) {
@@ -200,7 +200,7 @@ async function Function_Get(P) {
     return v;
 }
 
-function Function_HasInstance(V) {
+async function Function_HasInstance(V) {
     var F = this;
     if (typeof(V) !== 'object' || V === null) return false;
     var O = await F.Get("prototype");

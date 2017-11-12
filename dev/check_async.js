@@ -42,6 +42,7 @@ var async_methods = {
     DefaultValue: true,
     Call: true,
     Construct: true,
+    HasInstance: true,
     evaluate: true,
     CreateMutableBinding: true,
     SetMutableBinding: true,
@@ -91,7 +92,6 @@ for (var code of codes) {
         if (e[0] === '\n') line++;
         if (e === 'await') {
             name = e;
-            assert(split[i - 2] !== 'return');
             name = split[i + 2];
             assert(split[i + 1] === ' ');
             assert(!sync_functions[name]);
@@ -122,7 +122,7 @@ for (var code of codes) {
                         i -= 2;
                     }
                     assert(split[i - 4] === ' ');
-                    assert(split[i - 5] === 'await' || split[i - 5] === 'return');
+                    assert(split[i - 5] === 'await');
                 } else {
                     assert(split[i - 5] !== 'await');
                 }
@@ -131,7 +131,7 @@ for (var code of codes) {
                     assert(split[i - 3] !== 'await');
                 } else if (async_functions[name]) {
                     assert(split[i - 2] === ' ');
-                    assert(split[i - 3] === 'await' || split[i - 3] === 'return' || split[i - 3] === 'function');
+                    assert(split[i - 3] === 'await' || split[i - 3] === 'function');
                 } else {
                     unknown_functions[name] = true;
                 }
@@ -140,4 +140,4 @@ for (var code of codes) {
     });
 }
 
-console.log(Object.keys(unknown_functions));
+// console.log(Object.keys(unknown_functions));
