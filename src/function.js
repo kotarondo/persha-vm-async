@@ -70,13 +70,13 @@ function CreateFunction(body, Scope) {
     F.Extensible = true;
     var len = body.parameters.length;
     intrinsic_createData(F, "length", len, false, false, false);
-    var proto = initrinsic_Object();
-    initrinsic_createData(proto, "constructor", F, true, false, true);
-    initrinsic_createData(F, "prototype", proto, true, false, false);
+    var proto = intrinsic_Object();
+    intrinsic_createData(proto, "constructor", F, true, false, true);
+    intrinsic_createData(F, "prototype", proto, true, false, false);
     if (body.strict) {
         var thrower = realm.theThrowTypeError;
-        initrinsic_createAccessor(F, "caller", thrower, thrower, false, false);
-        initrinsic_createAccessor(F, "arguments", thrower, thrower, false, false);
+        intrinsic_createAccessor(F, "caller", thrower, thrower, false, false);
+        intrinsic_createAccessor(F, "arguments", thrower, thrower, false, false);
     }
     return F;
 }

@@ -156,23 +156,23 @@ function CompilerContext(params) {
 }
 
 CompilerContext.prototype.compileExpression = function(expr) {
-    assert(expr.compile, expr.toString()); // check if all expressions have own compilers
+    assert(expr.compile, expr); // check if all expressions have own compilers
     if (expr.compile) {
         return expr.compile(this);
     }
     // compiler doesn't exist (under development)
-    var name = this.literal({ evaluate: expr });
+    var name = this.literal(expr);
     return this.defineAny("await " + name + ".evaluate()");
 };
 
 CompilerContext.prototype.compileStatement = function(stmt) {
-    assert(stmt.compile, stmt.toString()); // check if all statements have own compilers
+    assert(stmt.compile, stmt); // check if all statements have own compilers
     if (stmt.compile) {
         stmt.compile(this);
         return;
     }
     // compiler doesn't exist (under development)
-    var name = this.literal({ evaluate: stmt });
+    var name = this.literal(stmt);
     this.text("var stmt=await " + name + ".evaluate();");
     this.text("if(stmt.type==='return')return stmt.value;");
     this.text("if(stmt.type==='throw')throw stmt.value;");
@@ -198,8 +198,7 @@ CompilerContext.expression = function(compile) {
         }
         return delayed();
     }
-    evaluate.compile = compile;
-    return evaluate;
+    return { evaluate, compile };
 };
 
 CompilerContext.reference = function(compile) {
@@ -214,13 +213,7 @@ CompilerContext.reference = function(compile) {
         }
         return delayed();
     }
-    evaluate.compile = compile;
-    return evaluate;
-};
-
-CompilerContext.statement = function(evaluate, compile) {
-    evaluate.compile = compile;
-    return evaluate;
+    return { evaluate, compile };
 };
 
 CompilerContext.prototype.text = function(text) {
@@ -293,7 +286,7 @@ CompilerContext.prototype.constantPrimitive = function(str) {
 CompilerContext.prototype.define = function(str, types) {
     assert(types);
     var name = "tmp" + (this.variables++);
-    if (str) this.text("var " + name + "= " + str + ";");
+    if (str) this.text("var " + name + "=" + str + ";");
     return {
         name: name,
         types: types,
@@ -342,7 +335,7 @@ CompilerContext.prototype.toMergeable = function(val) {
 
 CompilerContext.prototype.mergeDefine = function(mval, str, types) {
     assert(mval.isVariable, mval);
-    this.text("var " + mval.name + "= " + str + ";");
+    this.text("var " + mval.name + "=" + str + ";");
     mval.types = new CompilerTypes(mval.types, types);
     return mval;
 };
@@ -416,7 +409,7 @@ CompilerContext.prototype.compileNewDeclarativeEnvironment = function(staticEnv)
 CompilerContext.prototype.compileCreateMutableBinding = function(staticEnv, name) {
     if (isIncluded(name, staticEnv.locals)) {
         staticEnv.bindings[name] = "V" + (this.variables++);
-        this.text("var " + staticEnv.bindings[name] + "; // " + name);
+        this.text("var " + staticEnv.bindings[name] + ";//" + name);
     } else {
         assert(isIncluded(name, staticEnv.defs));
         this.text("await LexicalEnvironment.CreateMutableBinding(" + this.quote(name) + ");");
@@ -425,7 +418,7 @@ CompilerContext.prototype.compileCreateMutableBinding = function(staticEnv, name
 
 CompilerContext.prototype.compileSetMutableBinding = function(staticEnv, name, val, strict) {
     if (isIncluded(name, staticEnv.locals)) {
-        this.text(staticEnv.bindings[name] + " = " + val.name);
+        this.text(staticEnv.bindings[name] + "=" + val.name);
     } else {
         assert(isIncluded(name, staticEnv.defs));
         this.text("await LexicalEnvironment.SetMutableBinding(" + this.quote(name) + "," + val.name + "," + strict + ");");
@@ -435,7 +428,7 @@ CompilerContext.prototype.compileSetMutableBinding = function(staticEnv, name, v
 CompilerContext.prototype.compileCreateImmutableBinding = function(staticEnv, name) {
     if (isIncluded(name, staticEnv.locals)) {
         staticEnv.bindings[name] = "V" + (this.variables++);
-        this.text("var " + staticEnv.bindings[name] + "; // " + name);
+        this.text("var " + staticEnv.bindings[name] + ";//" + name);
     } else {
         assert(isIncluded(name, staticEnv.defs));
         this.text("LexicalEnvironment.CreateImmutableBinding(" + this.quote(name) + ");");
@@ -444,7 +437,7 @@ CompilerContext.prototype.compileCreateImmutableBinding = function(staticEnv, na
 
 CompilerContext.prototype.compileInitializeImmutableBinding = function(staticEnv, name, val) {
     if (isIncluded(name, staticEnv.locals)) {
-        this.text(staticEnv.bindings[name] + " = " + val.name);
+        this.text(staticEnv.bindings[name] + "=" + val.name);
     } else {
         assert(isIncluded(name, staticEnv.defs));
         this.text("LexicalEnvironment.InitializeImmutableBinding(" + this.quote(name) + "," + val.name + ");");
@@ -519,7 +512,7 @@ CompilerContext.prototype.compileGetValue = function(ref) {
         if (base.types.isNotObject()) {
             return this.defineValue("await specialGet(" + base.name + "," + ref.name + ")");
         }
-        this.text("if(typeof " + base.name + " ==='object')");
+        this.text("if(typeof " + base.name + "==='object')");
         var mval = this.defineValue("await " + base.name + ".Get(" + ref.name + ")");
         this.text("else");
         this.mergeValue(mval, "await specialGet(" + base.name + "," + ref.name + ")");
@@ -528,12 +521,12 @@ CompilerContext.prototype.compileGetValue = function(ref) {
         var base = ref.base;
         if (base.types === COMPILER_FUNCTION_ENV_TYPE || base.types === COMPILER_CATCH_ENV_TYPE ||
             base.types === COMPILER_NAMED_FUNCTION_ENV_TYPE) {
-            return this.defineValue(base.name + " .values[" + ref.name + "]");
+            return this.defineValue(base.name + ".values[" + ref.name + "]");
         } else if (base.types === COMPILER_GLOBAL_ENV_TYPE) {
             return this.defineValue("await Global_FastGetBindingValue(" + ref.name + ")");
         }
         if (!base.types.isNotUndefined()) {
-            this.text("if(" + base.name + " ===undefined)throw VMReferenceError(" + ref.name + " +' is not defined');");
+            this.text("if(" + base.name + "===undefined)throw VMReferenceError(" + ref.name + " +' is not defined');");
         }
         return this.defineValue("await " + base.name + ".GetBindingValue(" + ref.name + "," + ref.strict + ")");
     } else if (ref.types === COMPILER_LOCAL_REFERENCE_TYPE) {
@@ -554,28 +547,28 @@ CompilerContext.prototype.compilePutValue = function(ref, val) {
             this.text("await specialPut(" + base.name + "," + ref.name + "," + val.name + "," + ref.strict + ");");
             return;
         }
-        this.text("if(typeof " + base.name + " ==='object')");
+        this.text("if(typeof " + base.name + "==='object')");
         this.text("await " + base.name + ".Put(" + ref.name + "," + val.name + "," + ref.strict + ");");
         this.text("else");
         this.text("await specialPut(" + base.name + "," + ref.name + "," + val.name + "," + ref.strict + ");");
     } else if (ref.types === COMPILER_IDENTIFIER_REFERENCE_TYPE) {
         var base = ref.base;
         if (base.types === COMPILER_FUNCTION_ENV_TYPE || base.types === COMPILER_CATCH_ENV_TYPE) {
-            this.text(base.name + " .values[" + ref.name + "]= " + val.name + ";");
+            this.text(base.name + ".values[" + ref.name + "]=" + val.name + ";");
             return;
         } else if (base.types === COMPILER_GLOBAL_ENV_TYPE) {
             this.text("await realm.theGlobalObject.Put(" + ref.name + "," + val.name + "," + ref.strict + ");");
             return;
         }
         if (!base.types.isNotUndefined()) {
-            this.text("if(" + base.name + " ===undefined)");
-            if (ref.strict) this.text("throw VMReferenceError(" + ref.name + " +' is not defined');");
+            this.text("if(" + base.name + "===undefined)");
+            if (ref.strict) this.text("throw VMReferenceError(" + ref.name + "+' is not defined');");
             else this.text("await realm.theGlobalObject.Put(" + ref.name + "," + val.name + ",false);");
             this.text("else");
         }
         this.text("await " + base.name + ".SetMutableBinding(" + ref.name + "," + val.name + "," + ref.strict + ");");
     } else if (ref.types === COMPILER_LOCAL_REFERENCE_TYPE) {
-        this.text(ref.base.bindings[ref.name] + " = " + val.name + ";");
+        this.text(ref.base.bindings[ref.name] + "=" + val.name + ";");
     } else {
         this.text("await PutValue(" + ref.name + "," + val.name + ");");
     }
@@ -583,8 +576,8 @@ CompilerContext.prototype.compilePutValue = function(ref, val) {
 
 CompilerContext.prototype.compileToNumber = function(val) {
     if (val.types.isNumber()) return val;
-    return this.defineNumber("typeof " + val.name + " === 'number'? " + "+ " + val.name + //
-        " :+await ToNumber(" + val.name + ")");
+    return this.defineNumber("typeof " + val.name + "==='number'?" + "+" + val.name + //
+        ":+await ToNumber(" + val.name + ")");
 };
 
 CompilerContext.prototype.compileToString = function(val) {
@@ -603,8 +596,8 @@ CompilerContext.prototype.compileToPrimitive = function(val, hint) {
     if (hint) {
         return this.definePrimitive("await ToPrimitive(" + val.name + "," + hint + ")");
     } else {
-        return this.definePrimitive("typeof " + val.name + " !== 'object'? " + val.name + //
-            " :await ToPrimitive(" + val.name + ")");
+        return this.definePrimitive("typeof " + val.name + "!=='object'?" + val.name + //
+            ":await ToPrimitive(" + val.name + ")");
     }
 };
 
@@ -613,7 +606,7 @@ CompilerContext.prototype.compileEvaluateArguments = function(args) {
     for (var i = 0; i < args.length; i++) {
         var ref = this.compileExpression(args[i]);
         var arg = this.compileGetValue(ref);
-        this.text(argList.name + " .push(" + arg.name + ");");
+        this.text(argList.name + ".push(" + arg.name + ");");
     }
     return argList;
 };

@@ -73,8 +73,8 @@ for (var filename of filenames) {
     var split = text.split(/\b|(?=\n)|(?=")|(?=\.)/);
     line = 0;
     split.forEach(function(e, i) {
-        if (e[0] === '\n') line++;
-        if (e !== '\n') return;
+        if (e[0] !== '\n') return;
+        line++;
         var head = split[i + 1];
         if (head === 'function') {
             name = split[i + 3];
@@ -158,4 +158,4 @@ for (var code of codes) {
     });
 }
 
-// console.log(Object.keys(unknown_functions));
+console.log(Object.keys(unknown_functions));

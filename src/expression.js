@@ -37,14 +37,15 @@ function ThisExpression() {
     async function evaluate() {
         return ThisBinding;
     };
-    evaluate.compile = (function(ctx) {
+
+    function compile(ctx) {
         return {
             name: "ThisBinding",
             types: COMPILER_VALUE_TYPE,
             isSpecial: true,
         };
-    });
-    return evaluate;
+    }
+    return { evaluate, compile };
 }
 
 function IdentifierReference(staticEnv, identifier, strict) {
@@ -52,17 +53,19 @@ function IdentifierReference(staticEnv, identifier, strict) {
         var env = LexicalEnvironment;
         return GetIdentifierReference(env, identifier, strict);
     };
-    evaluate.compile = (function(ctx) {
+
+    function compile(ctx) {
         return ctx.compileGetIdentifierReferece(staticEnv, identifier, strict);
-    });
-    return evaluate;
+    }
+    return { evaluate, compile };
 }
 
 function Literal(value) {
     async function evaluate() {
         return value;
     };
-    evaluate.compile = (function(ctx) {
+
+    function compile(ctx) {
         switch (Type(value)) {
             case TYPE_Number:
                 var types = COMPILER_NUMBER_TYPE;
@@ -88,22 +91,23 @@ function Literal(value) {
             isLiteral: true,
             value: value
         };
-    });
-    return evaluate;
+    }
+    return { evaluate, compile };
 }
 
 function RegExpLiteral(regexp) {
     async function evaluate() {
         return RegExpFactory.createRegExpObject(regexp);
     }
-    evaluate.compile = (function(ctx) {
+
+    function compile(ctx) {
         return ctx.defineObject("RegExpFactory.createRegExpObject(" + ctx.literal(regexp) + ")");
-    });
-    return evaluate;
+    }
+    return { evaluate, compile };
 }
 
 function ArrayInitialiser(elements) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var length = elements.length;
         if (elements[length - 1] === empty) {
             length = length - 1;
@@ -123,17 +127,17 @@ function ArrayInitialiser(elements) {
 }
 
 function ObjectInitialiser(elements) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var obj = ctx.defineObject("intrinsic_Object()");
         for (var i = 0; i < elements.length; i++) {
-            elements[i](ctx, obj);
+            elements[i].compile(ctx, obj);
         }
         return obj;
     });
 }
 
 function PropertyAssignment(name, expression) {
-    return function(ctx, obj) {
+    function compile(ctx, obj) {
         var exprValue = ctx.compileExpression(expression);
         var propValue = ctx.compileGetValue(exprValue);
         if (name === '__proto__') {
@@ -141,27 +145,30 @@ function PropertyAssignment(name, expression) {
             return;
         }
         ctx.text("intrinsic_createData(" + obj.name + "," + ctx.quote(name) + "," + propValue.name + ",true,true,true);");
-    };
+    }
+    return { compile };
 }
 
 function PropertyAssignmentGet(name, body) {
-    return function(ctx, obj) {
+    function compile(ctx, obj) {
         var closure = ctx.constantValue("CreateFunction(" + ctx.literal(body) + ",LexicalEnvironment)");
         var desc = ctx.constantAny("AccessorPropertyDescriptor(" + closure.name + ",absent,true,true)");
         ctx.text("await " + obj.name + ".DefineOwnProperty(" + ctx.quote(name) + "," + desc.name + ",false);");
-    };
+    }
+    return { compile };
 }
 
 function PropertyAssignmentSet(name, body) {
-    return function(ctx, obj) {
+    function compile(ctx, obj) {
         var closure = ctx.constantValue("CreateFunction(" + ctx.literal(body) + ",LexicalEnvironment)");
         var desc = ctx.constantAny("AccessorPropertyDescriptor(absent," + closure.name + ",true,true)");
         ctx.text("await " + obj.name + ".DefineOwnProperty(" + ctx.quote(name) + "," + desc.name + ",false);");
-    };
+    }
+    return { compile };
 }
 
 function PropertyAccessor(base, name, strict) {
-    return CompilerContext.reference(function(ctx) {
+    return CompilerContext.reference(function compile(ctx) {
         var baseReference = ctx.compileExpression(base);
         var baseValue = ctx.compileGetValue(baseReference);
         var propertyNameReference = ctx.compileExpression(name);
@@ -192,7 +199,7 @@ function throwPropertyAccessorError(base, name) {
 }
 
 function NewOperator(expression, args) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var ref = ctx.compileExpression(expression);
         var cntr = ctx.compileGetValue(ref);
         var argList = ctx.compileEvaluateArguments(args);
@@ -208,7 +215,7 @@ function NewOperator(expression, args) {
 }
 
 function FunctionCall(expression, args, strict) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var ref = ctx.compileExpression(expression);
         var func = ctx.compileGetValue(ref);
         var argList = ctx.compileEvaluateArguments(args);
@@ -252,7 +259,7 @@ function throwNotAFunctionError(name) {
 }
 
 function PostfixIncrementOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lhs = ctx.compileExpression(expression);
         var oldValue = ctx.compileToNumber(ctx.compileGetValue(lhs));
         var newValue = ctx.constantNumber("(" + oldValue.name + "+1)");
@@ -262,7 +269,7 @@ function PostfixIncrementOperator(expression) {
 }
 
 function PostfixDecrementOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lhs = ctx.compileExpression(expression);
         var oldValue = ctx.compileToNumber(ctx.compileGetValue(lhs));
         var newValue = ctx.constantNumber("(" + oldValue.name + "-1)");
@@ -272,7 +279,7 @@ function PostfixDecrementOperator(expression) {
 }
 
 function deleteOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var ref = ctx.compileExpression(expression);
         var base = ref.base;
         if (ref.types === COMPILER_PROPERTY_REFERENCE_TYPE) {
@@ -297,7 +304,7 @@ function deleteOperator(expression) {
 }
 
 function voidOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var expr = ctx.compileExpression(expression);
         ctx.compileGetValue(expr);
         return COMPILER_UNDEFINED_VALUE;
@@ -305,7 +312,7 @@ function voidOperator(expression) {
 }
 
 function typeofOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var val = ctx.compileExpression(expression);
         if (val.types === COMPILER_PROPERTY_REFERENCE_TYPE) {
             var val = ctx.compileGetValue(val);
@@ -341,7 +348,7 @@ function typeofOperator(expression) {
 }
 
 function PrefixIncrementOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var expr = ctx.compileExpression(expression);
         var oldValue = ctx.compileToNumber(ctx.compileGetValue(expr));
         var newValue = ctx.defineNumber(oldValue.name + "+1");
@@ -351,7 +358,7 @@ function PrefixIncrementOperator(expression) {
 }
 
 function PrefixDecrementOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var expr = ctx.compileExpression(expression);
         var oldValue = ctx.compileToNumber(ctx.compileGetValue(expr));
         var newValue = ctx.defineNumber(oldValue.name + "-1");
@@ -361,14 +368,14 @@ function PrefixDecrementOperator(expression) {
 }
 
 function PlusOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var expr = ctx.compileExpression(expression);
         return ctx.compileToNumber(ctx.compileGetValue(expr));
     });
 }
 
 function MinusOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var expr = ctx.compileExpression(expression);
         var oldValue = ctx.compileToNumber(ctx.compileGetValue(expr));
         return ctx.constantNumber("(-" + oldValue.name + ")");
@@ -376,7 +383,7 @@ function MinusOperator(expression) {
 }
 
 function BitwiseNOTOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var expr = ctx.compileExpression(expression);
         var oldValue = ctx.compileToNumber(ctx.compileGetValue(expr));
         return ctx.constantNumber("(~" + oldValue.name + ")");
@@ -384,7 +391,7 @@ function BitwiseNOTOperator(expression) {
 }
 
 function LogicalNOTOperator(expression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var expr = ctx.compileExpression(expression);
         var oldValue = ctx.compileGetValue(expr);
         return ctx.constantBoolean("(!" + oldValue.name + ")");
@@ -392,7 +399,7 @@ function LogicalNOTOperator(expression) {
 }
 
 function MultiplicativeOperator(operator, leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var left = ctx.compileExpression(leftExpression);
         var leftValue = ctx.compileGetValue(left);
         var right = ctx.compileExpression(rightExpression);
@@ -411,7 +418,7 @@ function MultiplicativeOperator(operator, leftExpression, rightExpression) {
 }
 
 function AdditionOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -429,7 +436,7 @@ function AdditionOperator(leftExpression, rightExpression) {
 }
 
 function SubtractionOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -441,7 +448,7 @@ function SubtractionOperator(leftExpression, rightExpression) {
 }
 
 function LeftShiftOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -453,7 +460,7 @@ function LeftShiftOperator(leftExpression, rightExpression) {
 }
 
 function SignedRightShiftOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -465,7 +472,7 @@ function SignedRightShiftOperator(leftExpression, rightExpression) {
 }
 
 function UnsignedRightShiftOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -477,7 +484,7 @@ function UnsignedRightShiftOperator(leftExpression, rightExpression) {
 }
 
 function LessThanOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -489,7 +496,7 @@ function LessThanOperator(leftExpression, rightExpression) {
 }
 
 function GreaterThanOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -501,7 +508,7 @@ function GreaterThanOperator(leftExpression, rightExpression) {
 }
 
 function LessThanOrEqualOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -513,7 +520,7 @@ function LessThanOrEqualOperator(leftExpression, rightExpression) {
 }
 
 function GreaterThanOrEqualOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -525,7 +532,7 @@ function GreaterThanOrEqualOperator(leftExpression, rightExpression) {
 }
 
 function instanceofOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -541,7 +548,7 @@ function instanceofOperator(leftExpression, rightExpression) {
 }
 
 function inOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -558,7 +565,7 @@ function inOperator(leftExpression, rightExpression) {
 }
 
 function EqualsOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -576,7 +583,7 @@ function EqualsOperator(leftExpression, rightExpression) {
 }
 
 function DoesNotEqualOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -612,7 +619,7 @@ async function abstractEqualityComparison(x, y) {
 }
 
 function StrictEqualsOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -622,7 +629,7 @@ function StrictEqualsOperator(leftExpression, rightExpression) {
 }
 
 function StrictDoesNotEqualOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -632,7 +639,7 @@ function StrictDoesNotEqualOperator(leftExpression, rightExpression) {
 }
 
 function BinaryBitwiseOperator(operator, leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -651,7 +658,7 @@ function BinaryBitwiseOperator(operator, leftExpression, rightExpression) {
 }
 
 function LogicalAndOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         if (lval.isLiteral) {
@@ -671,7 +678,7 @@ function LogicalAndOperator(leftExpression, rightExpression) {
 }
 
 function LogicalOrOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         if (lval.isLiteral) {
@@ -691,7 +698,7 @@ function LogicalOrOperator(leftExpression, rightExpression) {
 }
 
 function ConditionalOperator(condition, firstExpression, secondExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(condition);
         var lval = ctx.compileGetValue(lref);
         ctx.text("if(" + lval.name + "){");
@@ -707,7 +714,7 @@ function ConditionalOperator(condition, firstExpression, secondExpression) {
 }
 
 function SimpleAssignment(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var rref = ctx.compileExpression(rightExpression);
         var rval = ctx.compileGetValue(rref);
@@ -718,7 +725,7 @@ function SimpleAssignment(leftExpression, rightExpression) {
 }
 
 function CompoundAssignment(operator, leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
@@ -792,7 +799,7 @@ function CompoundAssignment(operator, leftExpression, rightExpression) {
 }
 
 function CommaOperator(leftExpression, rightExpression) {
-    return CompilerContext.expression(function(ctx) {
+    return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
         var lval = ctx.compileGetValue(lref);
         var rref = ctx.compileExpression(rightExpression);
