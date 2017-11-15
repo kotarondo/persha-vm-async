@@ -154,6 +154,7 @@ for (var code of codes) {
                     assert(split[i - 3] === 'await' || split[i - 3] === 'function');
                 } else {
                     unknown_functions[name] = true;
+                    assert(split[i - 3] !== 'await');
                 }
             }
         }

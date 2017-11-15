@@ -136,6 +136,14 @@ async function ToInteger(input) {
     return Math.floor(number);
 }
 
+function _ToInteger(input) {
+    assert(typeof input === 'number');
+    if (isNaN(number)) return 0;
+    if (number === 0) return number;
+    if (number < 0) return -Math.floor(-number);
+    return Math.floor(number);
+}
+
 async function ToInt32(input) {
     var number = await ToNumber(input);
     return (number >> 0);
