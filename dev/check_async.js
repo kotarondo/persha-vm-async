@@ -78,10 +78,12 @@ for (var filename of filenames) {
         var head = split[i + 1];
         if (head === 'function') {
             name = split[i + 3];
+            assert(!async_functions[name]);
             sync_functions[name] = true;
         }
         if (head === 'async') {
             name = split[i + 5];
+            assert(!sync_functions[name]);
             async_functions[name] = true;
             assert(split[i + 3] === 'function');
         }
