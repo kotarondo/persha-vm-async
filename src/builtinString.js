@@ -159,7 +159,7 @@ async function String_prototype_match(thisValue, argumentsList) {
         var rx = await RegExp_Construct([regexp]);
     }
     var global = await rx.Get("global");
-    if (global !== true) return RegExp_prototype_exec(rx, [S]);
+    if (global !== true) return await RegExp_prototype_exec(rx, [S]);
     else {
         await rx.Put("lastIndex", 0);
         var A = intrinsic_Array();

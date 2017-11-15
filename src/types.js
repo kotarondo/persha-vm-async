@@ -33,6 +33,15 @@
 
 // ECMAScript 5.1: 8 Types
 
+const TYPE_Undefined = 1;
+const TYPE_Boolean = 2;
+const TYPE_Number = 3;
+const TYPE_String = 4;
+const TYPE_Null = 5;
+const TYPE_Object = 6;
+const TYPE_Reference = 7;
+const TYPE_EnvironmentRecord = 8;
+
 function Type(x) {
     switch (typeof x) {
         case "undefined":
@@ -733,6 +742,11 @@ function isEveryFieldOcurrsAndSameAs(Desc, x) {
 
 function default_enumerator(ownOnly, enumerableOnly) {
     return intrinsic_enumerator(this, ownOnly, enumerableOnly);
+}
+
+function intrinsic_get(O, P) {
+    var x = O.properties[P];
+    return x.Value;
 }
 
 function intrinsic_set(O, P, Desc) {
