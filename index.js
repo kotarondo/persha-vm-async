@@ -35,7 +35,7 @@ var fs = require('fs');
 var path = require('path');
 var vm = require('vm');
 
-var context = vm.createContext();
+var context = global;
 
 // for debug
 context.console = console;
@@ -44,7 +44,7 @@ var filenames = ['helper.js', 'unicode.js', 'regexp_compiler.js', 'compiler.js',
 
 for (var filename of filenames) {
     var text = fs.readFileSync(path.join(__dirname, 'src', filename), 'utf8');
-    vm.runInContext(text, context, { filename, displayErrors: true });
+    vm.runInThisContext(text, { filename, displayErrors: true });
 }
 
 function VM() {

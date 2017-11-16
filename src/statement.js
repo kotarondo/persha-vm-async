@@ -318,7 +318,7 @@ function ForVarStatement(variableDeclarationList, firstExpression, secondExpress
     async function evaluate() {
         for (var i = 0; i < variableDeclarationList.length; i++) {
             var variableDeclaration = variableDeclarationList[i];
-            variableDeclaration.evaluate();
+            await variableDeclaration.evaluate();
         }
         var V = empty;
         while (true) {
