@@ -132,6 +132,10 @@ async function test() {
     console.log('pass: ' + passCount)
     console.log('fail: ' + failCount)
     console.log('skip: ' + skipCount)
+    if(failCount > 0) process.exit(1);
 }
 
-test().catch(err => console.log(err))
+test().catch(err => {
+    console.log(err)
+    process.exit(1);
+})

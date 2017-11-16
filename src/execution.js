@@ -376,7 +376,6 @@ function compileDeclarationBindingInstantiation0(ctx, code) {
 }
 
 function CreateArgumentsObject(env, func, args) {
-    assert(Object.getPrototypeOf(env) === Class_DeclarativeEnvironment, env);
     var code = func.Code;
     var names = code.parameters;
     var strict = code.strict;
