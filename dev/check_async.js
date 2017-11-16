@@ -53,6 +53,7 @@ for (var m in {
 }
 
 var filenames = fs.readdirSync(path.join(__dirname, '..', 'src'));
+filenames.push('index.js');
 
 var name, line;
 
@@ -69,7 +70,11 @@ var unknown_functions = Object.create(null);
 
 for (var filename of filenames) {
     if (!/\.js$/.test(filename)) continue;
-    var text = fs.readFileSync(path.join(__dirname, '..', 'src', filename), 'utf8');
+    if (filename === 'index.js') {
+        var text = fs.readFileSync(path.join(__dirname, '..', filename), 'utf8');
+    } else {
+        var text = fs.readFileSync(path.join(__dirname, '..', 'src', filename), 'utf8');
+    }
     var split = text.split(/\b|(?=\n)|(?=")|(?=\.)/);
     line = 0;
     split.forEach(function(e, i) {

@@ -77,6 +77,7 @@ async function Global_evaluateProgram(thisValue, argumentsList) {
     }
     await enterExecutionContextForGlobalCode(prog);
     try {
+        //TODO compile
         var result = await prog.evaluate();
     } finally {
         exitExecutionContext();

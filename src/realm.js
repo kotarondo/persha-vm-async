@@ -44,9 +44,7 @@ function setRealm(r) {
 }
 
 function initializeRealm() {
-    realm = {
-        systemHandlers: Object.create(null),
-    };
+    realm = {};
 
     realm.Object_prototype = VMObject(Class_Object);
     realm.Object_prototype.Prototype = null;
@@ -518,6 +516,6 @@ function initializeRealm() {
     defineFinal(realm.URIError, "name", "URIError");
 
     realm.stackDepthLimit = 400;
-    realm.LocalTZA = 0 * 3600000;
+    realm.LocalTZA = 0;
     realm.LocalTZAString = "GMT";
 }

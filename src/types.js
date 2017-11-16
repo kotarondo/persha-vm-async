@@ -54,9 +54,9 @@ function Type(x) {
             return TYPE_String;
     }
     if (x === null) return TYPE_Null;
-    if (x.Class) return TYPE_Object;
-    if (x.strictReference) return TYPE_Reference;
-    if (x.HasBinding) return TYPE_EnvironmentRecord;
+    if (x.Class !== undefined) return TYPE_Object;
+    if (x.strictReference !== undefined) return TYPE_Reference;
+    if (x.HasBinding !== undefined) return TYPE_EnvironmentRecord;
     assert(false, x);
 }
 

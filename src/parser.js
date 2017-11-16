@@ -155,7 +155,7 @@ const Parser = (function() {
             var sourceElements = readSourceElements();
             if (token !== undefined) throw SyntaxError(tokenPos);
             code.strict = strict;
-            code.evaluate = Program(sourceElements);
+            code.evaluate = Program(sourceElements).evaluate; //TODO
             code.varEnv = varEnv;
         } else {
             assert(type === "function", type);

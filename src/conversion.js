@@ -138,10 +138,10 @@ async function ToInteger(input) {
 
 function _ToInteger(input) {
     assert(typeof input === 'number');
-    if (isNaN(number)) return 0;
-    if (number === 0) return number;
-    if (number < 0) return -Math.floor(-number);
-    return Math.floor(number);
+    if (isNaN(input)) return 0;
+    if (input === 0) return input;
+    if (input < 0) return -Math.floor(-input);
+    return Math.floor(input);
 }
 
 async function ToInt32(input) {
@@ -156,7 +156,7 @@ async function ToUint32(input) {
 
 function _ToUint32(input) {
     assert(typeof input === "number", input);
-    return (number >>> 0);
+    return (input >>> 0);
 }
 
 async function ToUint16(input) {

@@ -43,7 +43,7 @@ function BlockStatement(statementList) {
         if (statementList === undefined) return;
         ctx.compileStatement(statementList);
     }
-    return { evaluate, compiler, statementList };
+    return { evaluate, compile, statementList };
 }
 
 function StatementList(statements) {
