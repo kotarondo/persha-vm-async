@@ -41,18 +41,7 @@ function RegExpCompilerContext(params) {
 }
 
 RegExpCompilerContext.prototype.compileMatcher = function(match, c) {
-    assert(match.compile, match.toString()); // check if all matchers have own compilers
-    if (match.compile) {
-        match.compile(this, c);
-        return;
-    }
-    // compiler doesn't exist (under development)
-    this.text("var self=arguments.callee;");
-    this.text("var d=function(x){");
-    this.text("return self(literals,stack," + c + ",x,lastContinuation);}");
-    this.text("x=" + this.literal(match) + "(x,d);");
-    this.text("x=unpending(x);");
-    this.text("break Lsw;");
+    match.compile(this, c);
 };
 
 RegExpCompilerContext.matcher = function(compile) {

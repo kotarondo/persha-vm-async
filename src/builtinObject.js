@@ -90,7 +90,7 @@ async function Object_create(thisValue, argumentsList) {
     var O = argumentsList[0];
     var Properties = argumentsList[1];
     if (Type(O) !== TYPE_Object && Type(O) !== TYPE_Null) throw VMTypeError();
-    var obj = await Object_Construct([]);
+    var obj = intrinsic_Object();
     obj.Prototype = O;
     if (Properties !== undefined) {
         await Object_defineProperties(null, [obj, Properties]);
