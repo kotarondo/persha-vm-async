@@ -88,3 +88,8 @@ async function callEvaluateProgram(text, filename) {
     assert(result.type === "throw", result);
     throw result.value;
 }
+
+function nonDeterministicValue(v) {
+    return v;
+    throw VMError("not implemented"); // TODO
+}

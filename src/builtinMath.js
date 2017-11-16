@@ -40,27 +40,23 @@ async function Math_abs(thisValue, argumentsList) {
 
 async function Math_acos(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
-    //return Math.acos(x);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.acos(x));
 }
 
 async function Math_asin(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
-    // return Math.asin(x);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.asin(x));
 }
 
 async function Math_atan(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
-    // return Math.atan(x);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.atan(x));
 }
 
 async function Math_atan2(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
     var y = await ToNumber(argumentsList[1]);
-    // return Math.atan2(x, y);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.atan2(x, y));
 }
 
 async function Math_ceil(thisValue, argumentsList) {
@@ -70,14 +66,12 @@ async function Math_ceil(thisValue, argumentsList) {
 
 async function Math_cos(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
-    // return Math.cos(x);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.cos(x));
 }
 
 async function Math_exp(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
-    // return Math.exp(x);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.exp(x));
 }
 
 async function Math_floor(thisValue, argumentsList) {
@@ -87,8 +81,7 @@ async function Math_floor(thisValue, argumentsList) {
 
 async function Math_log(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
-    // return Math.log(x);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.log(x));
 }
 
 async function Math_max(thisValue, argumentsList) {
@@ -112,13 +105,11 @@ async function Math_min(thisValue, argumentsList) {
 async function Math_pow(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
     var y = await ToNumber(argumentsList[1]);
-    // return Math.pow(x, y);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.pow(x, y));
 }
 
 async function Math_random(thisValue, argumentsList) {
-    // return Math.random();
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.random());
 }
 
 async function Math_round(thisValue, argumentsList) {
@@ -128,18 +119,15 @@ async function Math_round(thisValue, argumentsList) {
 
 async function Math_sin(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
-    // return Math.sin(x);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.sin(x));
 }
 
 async function Math_sqrt(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
-    // return Math.sqrt(x);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.sqrt(x));
 }
 
 async function Math_tan(thisValue, argumentsList) {
     var x = await ToNumber(argumentsList[0]);
-    // return Math.tan(x);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Math.tan(x));
 }

@@ -317,7 +317,8 @@ function ForStatement(expressionNoIn, firstExpression, secondExpression, stateme
 function ForVarStatement(variableDeclarationList, firstExpression, secondExpression, statement, labelset, pos1, pos2) {
     async function evaluate() {
         for (var i = 0; i < variableDeclarationList.length; i++) {
-            variableDeclarationList[i]();
+            var variableDeclaration = variableDeclarationList[i];
+            variableDeclaration.evaluate();
         }
         var V = empty;
         while (true) {

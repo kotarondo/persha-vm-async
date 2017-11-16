@@ -321,8 +321,7 @@ async function Date_Construct(argumentsList) {
 async function Date_parse(thisValue, argumentsList) {
     var string = argumentsList[0];
     var s = await ToString(string);
-    // return Date.parse(s);
-    throw VMError("not implemented");
+    return nonDeterministicValue(Date.parse(s));
 }
 
 async function Date_UTC(thisValue, argumentsList) {
@@ -369,8 +368,7 @@ async function Date_UTC(thisValue, argumentsList) {
 }
 
 async function Date_now(thisValue, argumentsList) {
-    // return Date.now();
-    throw VMError("not implemented");
+    return nonDeterministicValue(Date.now());
 }
 
 async function Date_prototype_toString(thisValue, argumentsList) {
