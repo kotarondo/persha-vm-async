@@ -118,12 +118,18 @@ function VMURIError(message) {
 }
 
 async function Error_Call(thisValue, argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMError(message);
 }
 
 async function Error_Construct(argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMError(message);
 }
 
@@ -148,62 +154,98 @@ async function Error_prototype_toString(thisValue, argumentsList) {
 }
 
 async function EvalError_Call(thisValue, argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMEvalError(message);
 }
 
 async function EvalError_Construct(argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMEvalError(message);
 }
 
 async function RangeError_Call(thisValue, argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMRangeError(message);
 }
 
 async function RangeError_Construct(argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMRangeError(message);
 }
 
 async function ReferenceError_Call(thisValue, argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMReferenceError(message);
 }
 
 async function ReferenceError_Construct(argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMReferenceError(message);
 }
 
 async function SyntaxError_Call(thisValue, argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMSyntaxError(message);
 }
 
 async function SyntaxError_Construct(argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMSyntaxError(message);
 }
 
 async function TypeError_Call(thisValue, argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMTypeError(message);
 }
 
 async function TypeError_Construct(argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMTypeError(message);
 }
 
 async function URIError_Call(thisValue, argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMURIError(message);
 }
 
 async function URIError_Construct(argumentsList) {
-    var message = await ToString(argumentsList[0]);
+    var message = argumentsList[0];
+    if (message !== undefined) {
+        var message = await ToString(message);
+    }
     return VMURIError(message);
 }
 

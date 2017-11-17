@@ -419,7 +419,7 @@ function CreateArgumentsObject(env, func, args) {
 
 function ArgGet(env, name) {
     assert(Object.getPrototypeOf(env) === Class_DeclarativeEnvironment, env);
-    return env.values[N];
+    return env.values[name];
 }
 
 async function ArgSet(env, name, value) {

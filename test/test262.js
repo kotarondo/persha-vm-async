@@ -6,6 +6,10 @@ const fs = require('fs')
 const path = require('path')
 const VM = require('../index.js')
 
+// for Tests S15.9.3.1_A5_T*.js
+VM.LocalTZA = -8 * 3600000;
+VM.LocalTZAString = "PDT";
+
 process.chdir(path.join(__dirname, 'test262'))
 
 const stopIfFailed = process.env.STOP_IF_FAILED
@@ -132,7 +136,7 @@ async function test() {
     console.log('pass: ' + passCount)
     console.log('fail: ' + failCount)
     console.log('skip: ' + skipCount)
-    if(failCount > 0) process.exit(1);
+    if (failCount > 0) process.exit(1);
 }
 
 test().catch(err => {

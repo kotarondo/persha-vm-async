@@ -47,6 +47,20 @@ for (var filename of filenames) {
     vm.runInThisContext(text, { filename, displayErrors: true });
 }
 
+Object.defineProperty(VM, 'LocalTZA', {
+    get: () => context.LocalTZA,
+    set: v => context.LocalTZA = v,
+    enumerable: false,
+    configurable: false,
+});
+
+Object.defineProperty(VM, 'LocalTZAString', {
+    get: () => context.LocalTZAString,
+    set: v => context.LocalTZAString = v,
+    enumerable: false,
+    configurable: false,
+});
+
 function VM() {
     var realm;
 
