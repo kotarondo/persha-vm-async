@@ -255,5 +255,6 @@ function exportObjectTo(A, obj, map) {
             configurable: desc.Configurable,
         });
     }
+    Object.setPrototypeOf(obj, exportValue(A.Prototype, map));
     return obj;
 }
