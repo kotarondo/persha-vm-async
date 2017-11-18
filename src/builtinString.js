@@ -143,10 +143,7 @@ async function String_prototype_localeCompare(thisValue, argumentsList) {
     CheckObjectCoercible(thisValue);
     var S = await ToString(thisValue);
     var That = await ToString(that);
-    // avoid non-deterministic behaviour
-    if (S === That) return 0;
-    if (S > That) return 1;
-    return -1;
+    return nonDeterministicValue(S.localeCompare(That));
 }
 
 async function String_prototype_match(thisValue, argumentsList) {
@@ -458,8 +455,9 @@ async function String_prototype_toLowerCase(thisValue, argumentsList) {
 }
 
 async function String_prototype_toLocaleLowerCase(thisValue, argumentsList) {
-    // avoid non-deterministic behaviour
-    return await String_prototype_toLowerCase(thisValue, argumentsList);
+    CheckObjectCoercible(thisValue);
+    var S = await ToString(thisValue);
+    return nonDeterministicValue(S.toLocaleLowerCase());
 }
 
 async function String_prototype_toUpperCase(thisValue, argumentsList) {
@@ -473,8 +471,9 @@ async function String_prototype_toUpperCase(thisValue, argumentsList) {
 }
 
 async function String_prototype_toLocaleUpperCase(thisValue, argumentsList) {
-    // avoid non-deterministic behaviour
-    return await String_prototype_toUpperCase(thisValue, argumentsList);
+    CheckObjectCoercible(thisValue);
+    var S = await ToString(thisValue);
+    return nonDeterministicValue(S.toLocaleUpperCase());
 }
 
 async function String_prototype_trim(thisValue, argumentsList) {
