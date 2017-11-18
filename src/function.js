@@ -105,8 +105,8 @@ async function delayedFunctionBody(F, ThisBinding, argumentsList) {
 
 async function Function_ClassCall(thisValue, argumentsList) {
     var F = this;
-    saveExecutionContext();
     try {
+        saveExecutionContext();
         var code = F.Code;
         if (code.strict) {
             var ThisBinding = thisValue;

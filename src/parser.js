@@ -152,10 +152,9 @@ const Parser = (function() {
             stack = Stack();
             varEnv = Env(type, null);
             lexEnv = varEnv;
-            var sourceElements = readSourceElements();
+            code.sourceElements= readSourceElements();
             if (token !== undefined) throw SyntaxError(tokenPos);
             code.strict = strict;
-            code.evaluate = Program(sourceElements).evaluate; //TODO
             code.varEnv = varEnv;
         } else {
             assert(type === "function", type);

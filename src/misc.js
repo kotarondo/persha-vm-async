@@ -39,7 +39,7 @@ async function evaluateProgram(text, filename) {
     assert(typeof text === 'string');
     assert(!filename || typeof filename === 'string');
     try {
-        var prog = Parser.readCode('global', '', text, false, [], filename);
+        var code = Parser.readCode('global', '', text, false, [], filename);
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
             throw new SyntaxError(e.message);
@@ -49,27 +49,28 @@ async function evaluateProgram(text, filename) {
         }
         throw e;
     }
-    await enterExecutionContextForGlobalCode(prog);
     try {
-        /*
-            try {
-                var ctx = new CompilerContext("");
-                prog.compile(ctx);
-                var evaluate = ctx.finish();
-            } catch (e) {
-                console.error("CODEGEN ERROR:\n" + ctx.texts.join('\n'));
-                console.error(e.stack);
-                process.reallyExit(1);
-            }
-                var result = await evaluate();
-        */
-        var result = await prog.evaluate();
+        await enterExecutionContextForGlobalCode(code);
+        var sourceElements = code.sourceElements;
+        if (sourceElements === undefined) return;
+        try {
+            var ctx = new CompilerContext("");
+            sourceElements.compile(ctx);
+            var evaluate = ctx.finish();
+        } catch (e) {
+            console.error("CODEGEN ERROR:\n" + ctx.texts.join('\n'));
+            console.error(e.stack);
+            process.reallyExit(1);
+        }
+        try {
+            await evaluate();
+        } catch (V) {
+            if (isInternalError(V)) throw V;
+            throw exportValue(V, createDefaultMap());
+        }
     } finally {
         exitExecutionContext();
     }
-    if (result.type === 'normal') return;
-    assert(result.type === 'throw', result);
-    throw exportValue(result.value, createDefaultMap());
 }
 
 function createDefaultMap() {

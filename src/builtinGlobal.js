@@ -39,7 +39,7 @@ async function Global_eval(thisValue, argumentsList, direct, strict, lexEnv, var
     var x = argumentsList[0];
     if (Type(x) !== TYPE_String) return x;
     try {
-        var prog = Parser.readCode("eval", "", x, strict, [], "<anonymous>");
+        var code = Parser.readCode("eval", "", x, strict, [], "<anonymous>");
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
             throw VMSyntaxError(e.message);
@@ -49,16 +49,18 @@ async function Global_eval(thisValue, argumentsList, direct, strict, lexEnv, var
         }
         throw e;
     }
-    await enterExecutionContextForEvalCode(prog, direct, lexEnv, varEnv, thisB);
     try {
-        var result = await prog.evaluate();
+        await enterExecutionContextForEvalCode(code, direct, lexEnv, varEnv, thisB);
+        var sourceElements = code.sourceElements;
+        if (sourceElements === undefined) return;
+        var result = await sourceElements.evaluate();
+        if (result.type === "normal" && result.value === empty) return;
+        if (result.type === "normal") return result.value;
+        assert(result.type === "throw", result);
+        throw result.value;
     } finally {
         exitExecutionContext();
     }
-    if (result.type === "normal" && result.value === empty) return undefined;
-    if (result.type === "normal") return result.value;
-    assert(result.type === "throw", result);
-    throw result.value;
 }
 
 async function Global_parseInt(thisValue, argumentsList) {

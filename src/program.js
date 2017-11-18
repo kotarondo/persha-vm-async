@@ -33,20 +33,6 @@
 
 // ECMAScript 5.1: 14 Program
 
-function Program(sourceElements) {
-    async function evaluate() {
-        if (sourceElements === undefined) return CompletionValue("normal", empty, empty);
-        else return await sourceElements.evaluate();
-    }
-
-    function compile(ctx) {
-        if (sourceElements) {
-            ctx.compileStatement(sourceElements);
-        }
-    }
-    return { evaluate, compile };
-}
-
 function SourceElements(statements) {
     if (statements.length === 0) return undefined;
 

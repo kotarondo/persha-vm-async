@@ -120,7 +120,6 @@ const RegExpFactory = (function() {
         ctx.text("}");
         ctx.text("}");
         regexp.Match = ctx.finish();
-        //if(!dynamic) console.log(ctx.texts.join('\n'));
     }
 
     function evaluateDisjunction() {
