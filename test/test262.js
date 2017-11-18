@@ -82,6 +82,7 @@ async function doTest(test) {
     await vm.initialize()
     await vm.evaluateProgram(sta_source, 'sta.js')
     await vm.evaluateProgram(sta_patch_source, 'sta_patch.js')
+    // console.log(source)
     try {
         var result = await vm.evaluateProgram(source, test.path)
         if (test.negative === undefined) {

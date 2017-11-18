@@ -16,7 +16,7 @@
         "url": "https://github.com/kotarondo/persha-vm-async/issues"
     },
     "engines": {
-        "node": ">=7.6"
+        "node": ">=7.9"
     },
     "dependencies": {},
     "devDependencies": {},

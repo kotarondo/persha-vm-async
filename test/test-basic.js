@@ -9,7 +9,11 @@ const VM = require('../index.js')
 
 process.chdir(path.join(__dirname, 'basic'))
 
-var filenames = fs.readdirSync(".")
+if (process.argv.length <= 2) {
+    var filenames = fs.readdirSync(".")
+} else {
+    var filenames = process.argv.slice(2)
+}
 
 async function test() {
     while (filenames.length) {

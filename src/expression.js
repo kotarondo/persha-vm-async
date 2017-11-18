@@ -283,7 +283,7 @@ function deleteOperator(expression) {
         var ref = ctx.compileExpression(expression);
         var base = ref.base;
         if (ref.types === COMPILER_PROPERTY_REFERENCE_TYPE) {
-            return ctx.defineBoolean("(await ToObject(" + base.name + ")).Delete(" + ref.name + "," + ref.strict + ");");
+            return ctx.defineBoolean("(await ToObject(" + base.name + ")).Delete(" + ref.name + "," + ref.strict + ")");
         } else if (ref.types === COMPILER_IDENTIFIER_REFERENCE_TYPE) {
             if (base.types.isNotUndefined()) {
                 return ctx.defineBoolean(base.name + ".DeleteBinding(" + ref.name + ")");

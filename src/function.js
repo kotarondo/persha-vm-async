@@ -95,6 +95,9 @@ async function delayedFunctionBody(F, ThisBinding, argumentsList) {
         console.error(e.stack);
         process.reallyExit(1);
     }
+    // console.log('------------------');
+    // console.log(ctx.texts.join('\n'));
+    // console.log('------------------');
     var evaluate = ctx.finish();
     F.Code.evaluate = evaluate;
     return await evaluate(F, ThisBinding, argumentsList);
@@ -117,8 +120,17 @@ async function Function_ClassCall(thisValue, argumentsList) {
         runningFunction = F;
         runningCode = code;
         runningSourcePos = 0;
+        //
+        var saved = global_debug_stack_id;
+        var stack_id = Math.random();
+        global_debug_stack_id = stack_id;
+        //
         return await F.Code.evaluate(F, ThisBinding, argumentsList);
     } finally {
+        //
+        assert(global_debug_stack_id === stack_id, stack_id);
+        global_debug_stack_id = saved;
+        //
         exitExecutionContext();
     }
 }

@@ -51,6 +51,18 @@ async function evaluateProgram(text, filename) {
     }
     await enterExecutionContextForGlobalCode(prog);
     try {
+        /*
+            try {
+                var ctx = new CompilerContext("");
+                prog.compile(ctx);
+                var evaluate = ctx.finish();
+            } catch (e) {
+                console.error("CODEGEN ERROR:\n" + ctx.texts.join('\n'));
+                console.error(e.stack);
+                process.reallyExit(1);
+            }
+                var result = await evaluate();
+        */
         var result = await prog.evaluate();
     } finally {
         exitExecutionContext();
