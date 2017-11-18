@@ -152,7 +152,7 @@ const Parser = (function() {
             stack = Stack();
             varEnv = Env(type, null);
             lexEnv = varEnv;
-            code.sourceElements= readSourceElements();
+            code.sourceElements = readSourceElements();
             if (token !== undefined) throw SyntaxError(tokenPos);
             code.strict = strict;
             code.varEnv = varEnv;
