@@ -243,13 +243,14 @@ function exportObjectTo(A, obj, map) {
     for (var P in A.properties) {
         var desc = A.properties[P];
         if (desc.Value === absent) continue;
+        var v = exportValue(desc.Value, map);
         var d = Object.getOwnPropertyDescriptor(obj, P);
         if (d) {
-            if (d.writable) obj[P] = desc.Value;
+            if (d.writable) obj[P] = v;
             continue;
         }
         Object.defineProperty(obj, P, {
-            value: desc.Value,
+            value: v,
             writable: desc.Writable,
             enumerable: desc.Enumerable,
             configurable: desc.Configurable,

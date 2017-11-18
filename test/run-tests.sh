@@ -3,18 +3,20 @@
 # All rights reserved.
 # License: "BSD-3-Clause"
 
+cd "$(dirname "$0")"
+
 FAILED=0
 SUCCESS=0
 
 NAMEBASES=$*
 
 if [ -z "$NAMEBASES" ]; then
-	NAMEBASES="test262"
+	NAMEBASES="test- test262"
 fi
 
 for dir in $NAMEBASES
 do
-for file in test/${dir}*.js
+for file in ${dir}*.js
 do
 echo testing $file
 node $file
