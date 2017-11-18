@@ -73,8 +73,8 @@ function VM() {
     this.evaluateProgram = async function(text, filename) {
         var ctx = context.saveEntireContext();
         context.setRealm(realm);
-        var callEvaluateProgram = context.callEvaluateProgram;
-        var result = await callEvaluateProgram(text, filename);
+        var evaluateProgram = context.evaluateProgram;
+        var result = await evaluateProgram(text, filename);
         context.restoreEntireContext(ctx);
         return result;
     }

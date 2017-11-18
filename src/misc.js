@@ -68,7 +68,7 @@ function restoreEntireContext(ctx) {
     stackDepth = ctx.stackDepth;
 }
 
-async function callEvaluateProgram(text, filename) {
+async function evaluateProgram(text, filename) {
     assert(typeof text === 'string');
     assert(!filename || typeof filename === 'string');
     try {

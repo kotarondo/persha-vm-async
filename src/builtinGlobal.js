@@ -61,33 +61,6 @@ async function Global_eval(thisValue, argumentsList, direct, strict, lexEnv, var
     throw result.value;
 }
 
-async function Global_evaluateProgram(thisValue, argumentsList) {
-    var x = await ToString(argumentsList[0]);
-    var filename = await ToString(argumentsList[1]);
-    try {
-        var prog = Parser.readCode("global", "", x, false, [], filename);
-    } catch (e) {
-        if (e instanceof Parser.SyntaxError) {
-            throw VMSyntaxError(e.message);
-        }
-        if (e instanceof Parser.ReferenceError) {
-            throw VMReferenceError(e.message);
-        }
-        throw e;
-    }
-    await enterExecutionContextForGlobalCode(prog);
-    try {
-        //TODO compile
-        var result = await prog.evaluate();
-    } finally {
-        exitExecutionContext();
-    }
-    if (result.type === "normal" && result.value === empty) return undefined;
-    if (result.type === "normal") return result.value;
-    assert(result.type === "throw", result);
-    throw result.value;
-}
-
 async function Global_parseInt(thisValue, argumentsList) {
     var string = argumentsList[0];
     var radix = argumentsList[1];

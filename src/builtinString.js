@@ -185,6 +185,7 @@ async function String_prototype_match(thisValue, argumentsList) {
         }
     }
     if (n === 0) return null;
+    intrinsic_set_value(A, "length", n);
     return A;
 }
 
@@ -375,13 +376,13 @@ async function String_prototype_split(thisValue, argumentsList) {
     }
     if (lim === 0) return A;
     if (separator === undefined) {
-        defineFree(A, 0, S);
+        await A.DefineOwnProperty(0, DataPropertyDescriptor(S, true, true, true), false);
         return A;
     }
     if (s === 0) {
         var z = SplitMatch(S, 0, R);
         if (z !== failure) return A;
-        defineFree(A, 0, S);
+        await A.DefineOwnProperty(0, DataPropertyDescriptor(S, true, true, true), false);
         return A;
     }
     var q = p;
@@ -396,14 +397,14 @@ async function String_prototype_split(thisValue, argumentsList) {
                 var q = q + 1;
             } else {
                 var T = S.substring(p, q);
-                defineFree(A, lengthA, T);
+                await A.DefineOwnProperty(lengthA, DataPropertyDescriptor(T, true, true, true), false);
                 lengthA++;
                 if (lengthA === lim) return A;
                 var p = e;
                 var i = 0;
                 while (i < R.NCapturingParens) {
                     var i = i + 1;
-                    defineFree(A, lengthA, cap[i]);
+                    await A.DefineOwnProperty(lengthA, DataPropertyDescriptor(cap[i], true, true, true), false);
                     lengthA++;
                     if (lengthA === lim) return A;
                 }
@@ -412,7 +413,7 @@ async function String_prototype_split(thisValue, argumentsList) {
         }
     }
     var T = S.substring(p, s);
-    defineFree(A, lengthA, T);
+    await A.DefineOwnProperty(lengthA, DataPropertyDescriptor(T, true, true, true), false);
     return A;
 
     function SplitMatch(S, q, R) {
