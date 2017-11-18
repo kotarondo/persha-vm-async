@@ -120,17 +120,17 @@ async function Function_ClassCall(thisValue, argumentsList) {
         runningFunction = F;
         runningCode = code;
         runningSourcePos = 0;
-        //
+        /*
         var saved = global_debug_stack_id;
-        var stack_id = Math.random();
+        var stack_id = ++debug_index;
         global_debug_stack_id = stack_id;
-        //
+        */
         return await F.Code.evaluate(F, ThisBinding, argumentsList);
     } finally {
-        //
+        /*
         assert(global_debug_stack_id === stack_id, stack_id);
         global_debug_stack_id = saved;
-        //
+        */
         exitExecutionContext();
     }
 }

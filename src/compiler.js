@@ -144,7 +144,8 @@ CompilerTypes.prototype.isNotUndefined = function() {
     });
 };
 
-var global_debug_stack_id;
+var global_debug_stack_id = 0;
+var debug_index = 0;
 
 // constructor
 function CompilerContext(params) {
@@ -155,7 +156,7 @@ function CompilerContext(params) {
     this.iterables = 0;
     this.switches = 0;
     this.labels = [];
-    this.text("var debug_stack_id = global_debug_stack_id;");
+    // this.text("var debug_stack_id = global_debug_stack_id;");
 }
 
 CompilerContext.prototype.compileExpression = function(expr) {
@@ -170,7 +171,8 @@ CompilerContext.prototype.compileExpression = function(expr) {
 
 CompilerContext.prototype.compileStatement = function(stmt) {
     assert(stmt.compile, stmt); // check if all statements have own compilers
-    this.text("assert(debug_stack_id===global_debug_stack_id, " + Math.random() + ");");
+    // this.text("await Promise.resolve();"); // for test
+    // this.text("if(debug_stack_id!==global_debug_stack_id) assert(false," + (++debug_index) + ");");
     if (stmt.compile) {
         stmt.compile(this);
         return;
