@@ -103,20 +103,20 @@ async function delayedFunctionBody(F, ThisBinding, argumentsList) {
 async function Function_ClassCall(thisValue, argumentsList) {
     var F = this;
     saveExecutionContext();
-    var code = F.Code;
-    if (code.strict) {
-        var ThisBinding = thisValue;
-    } else if (thisValue === null || thisValue === undefined) {
-        var ThisBinding = realm.theGlobalObject;
-    } else if (typeof(thisValue) !== 'object') {
-        var ThisBinding = await ToObject(thisValue);
-    } else {
-        var ThisBinding = thisValue;
-    }
-    runningFunction = F;
-    runningCode = code;
-    runningSourcePos = 0;
     try {
+        var code = F.Code;
+        if (code.strict) {
+            var ThisBinding = thisValue;
+        } else if (thisValue === null || thisValue === undefined) {
+            var ThisBinding = realm.theGlobalObject;
+        } else if (typeof(thisValue) !== 'object') {
+            var ThisBinding = await ToObject(thisValue);
+        } else {
+            var ThisBinding = thisValue;
+        }
+        runningFunction = F;
+        runningCode = code;
+        runningSourcePos = 0;
         return await F.Code.evaluate(F, ThisBinding, argumentsList);
     } finally {
         exitExecutionContext();

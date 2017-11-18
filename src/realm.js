@@ -513,8 +513,4 @@ function initializeRealm() {
     defineFinal(realm.SyntaxError, "name", "SyntaxError");
     defineFinal(realm.TypeError, "name", "TypeError");
     defineFinal(realm.URIError, "name", "URIError");
-
-    realm.stackDepthLimit = 400;
-    realm.LocalTZA = 0;
-    realm.LocalTZAString = "GMT";
 }

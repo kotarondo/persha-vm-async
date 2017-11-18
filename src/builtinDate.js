@@ -33,6 +33,9 @@
 
 // ECMAScript 5.1: 15.9 Date Objects
 
+var LocalTZA = 0;
+var LocalTZAString = "GMT";
+
 function modulo(x, y) {
     return x - y * Math.floor(x / y);
 }
@@ -128,11 +131,11 @@ function DaylightSavingTA(t) {
 }
 
 function LocalTime(t) {
-    return t + realm.LocalTZA + DaylightSavingTA(t);
+    return t + LocalTZA + DaylightSavingTA(t);
 }
 
 function UTCTime(t) {
-    return t - realm.LocalTZA - DaylightSavingTA(t - realm.LocalTZA);
+    return t - LocalTZA - DaylightSavingTA(t - LocalTZA);
 }
 
 function HourFromTime(t) {
@@ -375,7 +378,7 @@ async function Date_prototype_toString(thisValue, argumentsList) {
     var thisTimeValue = await Date_prototype_valueOf(thisValue);
     var t = LocalTime(thisTimeValue);
     if (isFinite(t) === false) return "Invalid Date";
-    return toISODateString(t) + " " + toISOTimeString(t) + " " + realm.LocalTZAString;
+    return toISODateString(t) + " " + toISOTimeString(t) + " " + LocalTZAString;
 }
 
 async function Date_prototype_toDateString(thisValue, argumentsList) {

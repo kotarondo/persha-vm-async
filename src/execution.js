@@ -192,8 +192,10 @@ var runningSourcePos;
 var outerExecutionContext;
 var stackDepth = 0;
 
+var stackDepthLimit = 400;
+
 function saveExecutionContext() {
-    if (stackDepth >= realm.stackDepthLimit) {
+    if (stackDepth >= stackDepthLimit) {
         throw VMRangeError("stack overflow");
     }
     stackDepth++;

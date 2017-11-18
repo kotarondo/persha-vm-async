@@ -35,39 +35,6 @@ function nonDeterministicValue(v) {
     return v;
 }
 
-function saveEntireContext() {
-    return {
-        realm,
-        LexicalEnvironment,
-        VariableEnvironment,
-        ThisBinding,
-        runningFunction,
-        runningCode,
-        runningSourcePos,
-        outerExecutionContext,
-        stackDepth,
-    };
-    realm = undefined;
-    LexicalEnvironment = undefined;
-    VariableEnvironment = undefined;
-    ThisBinding = undefined;
-    runningFunction = undefined;
-    runningCode = undefined;
-    runningSourcePos = undefined;
-    stackDepth = 0;
-}
-
-function restoreEntireContext(ctx) {
-    realm = ctx.realm;
-    LexicalEnvironment = ctx.LexicalEnvironment;
-    VariableEnvironment = ctx.VariableEnvironment;
-    ThisBinding = ctx.ThisBinding;
-    runningFunction = ctx.runningFunction;
-    runningCode = ctx.runningCode;
-    runningSourcePos = ctx.runningSourcePos;
-    stackDepth = ctx.stackDepth;
-}
-
 async function evaluateProgram(text, filename) {
     assert(typeof text === 'string');
     assert(!filename || typeof filename === 'string');
