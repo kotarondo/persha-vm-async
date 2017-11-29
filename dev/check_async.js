@@ -53,7 +53,6 @@ for (var m in {
 }
 
 var filenames = fs.readdirSync(path.join(__dirname, '..', 'src'));
-filenames.push('index.js');
 
 var name, line;
 

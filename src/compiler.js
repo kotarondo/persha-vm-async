@@ -171,7 +171,6 @@ CompilerContext.prototype.compileExpression = function(expr) {
 
 CompilerContext.prototype.compileStatement = function(stmt) {
     assert(stmt.compile, stmt); // check if all statements have own compilers
-    // this.text("await Promise.resolve();"); // for test
     // this.text("if(debug_stack_id!==global_debug_stack_id) assert(false," + (++debug_index) + ");");
     if (stmt.compile) {
         stmt.compile(this);

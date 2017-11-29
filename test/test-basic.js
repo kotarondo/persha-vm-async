@@ -6,6 +6,7 @@ const fs = require('fs')
 const path = require('path')
 const assert = require('assert')
 const VM = require('../index.js')
+var vm = new VM()
 
 process.chdir(path.join(__dirname, 'basic'))
 
@@ -21,10 +22,9 @@ async function test() {
         if (!/^test.*\.js$/.test(filename)) continue
         console.log(filename)
         var source = fs.readFileSync(filename, 'utf8')
-        var vm = new VM()
-        await vm.initialize()
+        var realm = await vm.createRealm()
         try {
-            await vm.evaluateProgram(source, filename)
+            await vm.evaluateProgram(realm, source, filename)
             console.log('failed')
             process.exit(1);
         } catch (err) {

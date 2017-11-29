@@ -35,14 +35,6 @@
 
 var realm;
 
-function getRealm() {
-    return realm;
-}
-
-function setRealm(r) {
-    realm = r;
-}
-
 function initializeRealm() {
     realm = {};
 

@@ -868,3 +868,21 @@ function defineAccessor(obj, name, get, set) {
     }
     intrinsic_createAccessor(obj, name, Get, Set, false, true);
 }
+
+function safe_get_property(O, P) {
+    while (true) {
+        var prop = O.properties[P];
+        if (prop) return prop;
+        var proto = O.Prototype;
+        if (proto === null) return undefined;
+        O = proto;
+    }
+}
+
+function safe_get_primitive_value(O, P) {
+    var prop = safe_get_property(O, P);
+    if (prop && isPrimitiveValue(prop.Value)) {
+        return prop.Value;
+    }
+    return undefined;
+}

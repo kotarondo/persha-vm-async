@@ -39,7 +39,7 @@ async function Global_eval(thisValue, argumentsList, direct, strict, lexEnv, var
     var x = argumentsList[0];
     if (Type(x) !== TYPE_String) return x;
     try {
-        var code = Parser.readCode("eval", "", x, strict, [], "<anonymous>");
+        var code = Parser.readCode("eval", "", x, strict, "<anonymous>");
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
             throw VMSyntaxError(e.message);

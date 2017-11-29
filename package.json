@@ -1,11 +1,12 @@
 {
     "name": "persha-vm-async",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "Deterministic JavaScript Virtual Machine (asynchronous version)",
     "author": "Kotaro Endo <kotarondo@gmail.com>",
     "license": "BSD-3-Clause",
     "keywords": [
         "deterministic",
+        "async",
         "javascript"
     ],
     "repository": {

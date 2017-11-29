@@ -57,7 +57,7 @@ async function Function_Construct(argumentsList) {
     }
     var body = await ToString(body);
     try {
-        var code = Parser.readCode("function", P, body, false, [], "<anonymous>");
+        var code = Parser.readCode("function", P, body, false, "<anonymous>");
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
             throw VMSyntaxError(e.message);

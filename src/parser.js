@@ -74,11 +74,11 @@ const Parser = (function() {
     var varEnv;
     var lexEnv;
 
-    function setup(type, parameterText, codeText, strictMode, subc, filename) {
+    function setup(type, parameterText, codeText, strictMode, filename) {
         assert(strictMode !== undefined);
         source = codeText;
         strict = strictMode;
-        subcodes = subc;
+        subcodes = [];
         sourceObject = NewSourceObject(type, parameterText, codeText, strictMode, filename);
         code = undefined;
         stack = undefined;
@@ -145,9 +145,9 @@ const Parser = (function() {
         return env;
     }
 
-    function readCode(type, parameterText, codeText, strictMode, subcodes, filename) {
+    function readCode(type, parameterText, codeText, strictMode, filename) {
         if (type === "global" || type === "eval") {
-            setup(type, parameterText, codeText, strictMode, subcodes, filename);
+            setup(type, parameterText, codeText, strictMode, filename);
             code = Code(type);
             stack = Stack();
             varEnv = Env(type, null);
@@ -172,7 +172,7 @@ const Parser = (function() {
                     expectingToken(',');
                 }
             }
-            setup(type, parameterText, codeText, strictMode, subcodes, filename);
+            setup(type, parameterText, codeText, strictMode, filename);
             code = readFunctionBody(undefined, parameters, null);
             if (code.strict) {
                 disallowDuplicated(parameters);

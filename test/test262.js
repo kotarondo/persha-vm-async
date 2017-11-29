@@ -5,10 +5,11 @@
 const fs = require('fs')
 const path = require('path')
 const VM = require('../index.js')
+const vm = new VM();
 
 // for Tests S15.9.3.1_A5_T*.js
-VM.LocalTZA = -8 * 3600000;
-VM.LocalTZAString = "PDT";
+vm.context.LocalTZA = -8 * 3600000;
+vm.context.LocalTZAString = "PDT";
 
 process.chdir(path.join(__dirname, 'test262'))
 
@@ -78,13 +79,12 @@ async function doTest(test) {
     console.log(test.path)
     var source = new Buffer(test.code, 'base64').toString('binary')
     source = decodeURIComponent(escape(source)) // UTF-8 decoding trick
-    var vm = new VM()
-    await vm.initialize()
-    await vm.evaluateProgram(sta_source, 'sta.js')
-    await vm.evaluateProgram(sta_patch_source, 'sta_patch.js')
+    var realm = await vm.createRealm()
+    await vm.evaluateProgram(realm, sta_source, 'sta.js')
+    await vm.evaluateProgram(realm, sta_patch_source, 'sta_patch.js')
     // console.log(source)
     try {
-        var result = await vm.evaluateProgram(source, test.path)
+        var result = await vm.evaluateProgram(realm, source, test.path)
         if (test.negative === undefined) {
             return true
         }

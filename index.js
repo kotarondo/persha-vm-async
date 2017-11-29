@@ -33,48 +33,108 @@
 
 var fs = require('fs');
 var path = require('path');
-var vm = require('vm');
+var assert = require('assert');
 
-var context = global;
-
-// for debug
-context.console = console;
-
+var prefix = "_prsh";
+var index = 0;
 var filenames = ['helper.js', 'unicode.js', 'regexp_compiler.js', 'compiler.js', 'builtinArray.js', 'builtinBoolean.js', 'builtinDate.js', 'builtinError.js', 'builtinFunction.js', 'builtinGlobal.js', 'builtinJSON.js', 'builtinMath.js', 'builtinNumber.js', 'builtinObject.js', 'builtinRegExp.js', 'builtinString.js', 'conversion.js', 'expression.js', 'function.js', 'statement.js', 'program.js', 'parser.js', 'execution.js', 'types.js', 'realm.js', 'misc.js'];
 
-for (var filename of filenames) {
-    var text = fs.readFileSync(path.join(__dirname, 'src', filename), 'utf8');
-    vm.runInThisContext(text, { filename, displayErrors: true });
+function registerName(name, map) {
+    if (/\W/.test(name) || map[name]) {
+        var err = new Error("NG: invalid name:" + name);
+        debugger;
+        throw err;
+    }
+    map[name] = prefix + (index++);
 }
 
-Object.defineProperty(VM, 'LocalTZA', {
-    get: () => context.LocalTZA,
-    set: v => context.LocalTZA = v,
-    enumerable: false,
-    configurable: false,
-});
-
-Object.defineProperty(VM, 'LocalTZAString', {
-    get: () => context.LocalTZAString,
-    set: v => context.LocalTZAString = v,
-    enumerable: false,
-    configurable: false,
-});
-
-function VM() {
-    var realm;
-
-    this.initialize = function() {
-        context.setRealm(null);
-        context.initializeRealm();
-        realm = context.getRealm();
+class VM {
+    constructor(plugins = []) {
+        var context = Object.create(null);
+        var map = Object.create(null);
+        var codes = [];
+        for (var filename of filenames) {
+            var text = fs.readFileSync(path.join(__dirname, 'src', filename), 'utf8');
+            codes.push({ filename, text });
+        }
+        codes = codes.concat(plugins);
+        for (var code of codes) {
+            var { filename, text } = code;
+            var split = text.split(/\b|(?=\n)/);
+            split.forEach(function(e, i) {
+                if (e !== '\n') return;
+                switch (split[i + 1]) {
+                    case 'async':
+                        assert(split[i + 2] === ' ');
+                        assert(split[i + 3] === 'function');
+                        assert(split[i + 4] === ' ');
+                        var name = split[i + 5];
+                        break;
+                    case 'function':
+                        assert(split[i + 2] === ' ');
+                        var name = split[i + 3];
+                        break;
+                    case 'const':
+                        assert(split[i + 2] === ' ');
+                        var name = split[i + 3];
+                        break;
+                    case 'var':
+                        assert(split[i + 2] === ' ');
+                        var name = split[i + 3];
+                        break;
+                    default:
+                        return;
+                }
+                registerName(name, map);
+            });
+        }
+        for (var code of codes) {
+            var { filename, text } = code;
+            var split = text.split(/\b|(?=\n)/);
+            split.forEach(function(e, i) {
+                var n = map[e];
+                if (n) { split[i] = n; }
+            });
+            var text = split.join('');
+            require('vm').runInThisContext(text, { filename, displayErrors: true });
+        }
+        for (var name of Object.keys(map)) {
+            let mn = map[name];
+            Object.defineProperty(context, name, {
+                get: () => global[mn],
+                set: v => global[mn] = v,
+                enumerable: false,
+                configurable: false,
+            });
+        }
+        this.context = context;
     }
 
-    this.evaluateProgram = async function(text, filename) {
-        var saved = context.getRealm();
-        context.setRealm(realm);
+    createRealm() {
+        var context = this.context;
+        var saved = context.realm;
+        context.realm = null;
+        context.initializeRealm();
+        var realm = context.realm;
+        context.realm = saved;
+        return realm;
+    }
+
+    async evaluateProgram(realm, text, filename) {
+        var context = this.context;
+        var saved = context.realm;
+        context.realm = realm;
         var result = await context.evaluateProgram(text, filename);
-        context.setRealm(saved);
+        context.realm = saved;
+        return result;
+    }
+
+    async evaluateFunction(realm, parameterText, codeText, filename, args) {
+        var context = this.context;
+        var saved = context.realm;
+        context.realm = realm;
+        var result = await context.evaluateFunction(parameterText, codeText, filename, args);
+        context.realm = saved;
         return result;
     }
 }

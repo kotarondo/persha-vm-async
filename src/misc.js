@@ -39,7 +39,7 @@ async function evaluateProgram(text, filename) {
     assert(typeof text === 'string');
     assert(!filename || typeof filename === 'string');
     try {
-        var code = Parser.readCode('global', '', text, false, [], filename);
+        var code = Parser.readCode('global', '', text, false, filename);
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
             throw new SyntaxError(e.message);
@@ -66,14 +66,44 @@ async function evaluateProgram(text, filename) {
             await evaluate();
         } catch (V) {
             if (isInternalError(V)) throw V;
-            throw exportValue(V, createDefaultMap());
+            throw exportValue(V, createDefaultExportMap());
         }
     } finally {
         exitExecutionContext();
     }
 }
 
-function createDefaultMap() {
+async function evaluateFunction(parameterText, codeText, filename, args) {
+    assert(typeof codeText === 'string');
+    assert(typeof parameterText === 'string');
+    assert(!filename || typeof filename === 'string');
+    try {
+        var code = Parser.readCode("function", parameterText, codeText, false, filename);
+    } catch (e) {
+        if (e instanceof Parser.SyntaxError) {
+            throw new SyntaxError(e.message);
+        }
+        if (e instanceof Parser.ReferenceError) {
+            throw new ReferenceError(e.message);
+        }
+        throw e;
+    }
+    var argumentsList = [];
+    var map = createDefaultImportMap();
+    for (var i = 0; i < args.length; i++) {
+        argumentsList[i] = importValue(args[i], map);
+    }
+    var F = CreateFunction(code, realm.theGlobalEnvironment);
+    try {
+        var r = await F.Call(null, argumentsList);
+        return exportValue(r, createDefaultExportMap());
+    } catch (V) {
+        if (isInternalError(V)) throw V;
+        throw exportValue(V, createDefaultExportMap());
+    }
+}
+
+function createDefaultExportMap() {
     var map = new Map();
     map.set(realm.Object_prototype, Object.prototype);
     map.set(realm.Array_prototype, Array.prototype);
@@ -133,24 +163,6 @@ function exportValue(A, map) {
     }
     map.set(A, obj);
     return obj;
-}
-
-function safe_get_property(O, P) {
-    var prop = O.properties[P];
-    if (prop !== undefined) return prop;
-    var proto = O.Prototype;
-    if (proto === null) return undefined;
-    return safe_get_property(proto, P);
-}
-
-function safe_get_primitive_value(O, P) {
-    var prop = safe_get_property(O, P);
-    if (prop === undefined) return undefined;
-    if (prop.Value === absent) return undefined;
-    if (isPrimitiveValue(prop.Value)) {
-        return prop.Value;
-    }
-    return undefined;
 }
 
 function exportRegExp(A) {
@@ -237,5 +249,44 @@ function exportObjectTo(A, obj, map) {
         });
     }
     Object.setPrototypeOf(obj, exportValue(A.Prototype, map));
+    return obj;
+}
+
+function createDefaultImportMap() {
+    var map = new Map();
+    return map;
+}
+
+function importValue(A, map) {
+    if (isPrimitiveValue(A)) {
+        return A;
+    }
+    if (map.has(A)) {
+        return map.get(A);
+    }
+    if (Array.isArray(A)) {
+        var obj = intrinsic_Array();
+        map.set(A, obj);
+        importObjectTo(A, obj, map);
+    } else {
+        var obj = intrinsic_Object();
+        map.set(A, obj);
+        importObjectTo(A, obj, map);
+    }
+    return obj;
+}
+
+function importObjectTo(A, obj, map) {
+    for (var P of Object.getOwnPropertyNames(A)) {
+        var desc = Object.getOwnPropertyDescriptor(A, P);
+        if (!('value' in desc)) continue;
+        var v = importValue(desc.value, map);
+        var d = obj.properties[P];
+        if (d) {
+            if (d.Writable) intrinsic_set_value(obj, P, v);
+            continue;
+        }
+        intrinsic_createData(obj, P, v, desc.ritable, desc.enumerable, desc.configurable);
+    }
     return obj;
 }
