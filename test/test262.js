@@ -3,6 +3,7 @@
 // License: 'BSD-3-Clause'
 
 const fs = require('fs')
+const assert = require('assert')
 const path = require('path')
 const VM = require('../index.js')
 const vm = new VM();
@@ -84,23 +85,29 @@ async function doTest(test) {
     await vm.evaluateProgram(realm, sta_patch_source, 'sta_patch.js')
     // console.log(source)
     try {
-        var result = await vm.evaluateProgram(realm, source, test.path)
-        if (test.negative === undefined) {
-            return true
+        var { type, value } = await vm.evaluateProgram(realm, source, test.path)
+        if (type === 'normal') {
+            if (test.negative === undefined) {
+                return true
+            }
+            var err = test.negative
+        } else {
+            assert(type === 'throw')
+            var err = value
+            if (test.negative !== undefined) {
+                try {
+                    if (new RegExp(test.negative, 'i').test(err)) {
+                        return true
+                    }
+                } catch (e) {
+                    var err = e
+                }
+            }
         }
     } catch (e) {
         var err = e
-        if (test.negative !== undefined) {
-            try {
-                if (new RegExp(test.negative, 'i').test(err)) {
-                    return true
-                }
-            } catch (e) {
-                var err = e
-            }
-        }
     }
-    console.log('ERROR:', err || result)
+    console.log('ERROR:', err)
     console.log()
     console.log(test.description)
     console.log(test.path)

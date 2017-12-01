@@ -24,15 +24,15 @@ async function test() {
         var source = fs.readFileSync(filename, 'utf8')
         var realm = await vm.createRealm()
         try {
-            await vm.evaluateProgram(realm, source, filename)
-            console.log('failed')
-            process.exit(1);
-        } catch (err) {
-            if (Array.isArray(err) && err[2] === "DONE") {
-                assert.deepStrictEqual(err[0], err[1])
+            var { type, value } = await vm.evaluateProgram(realm, source, filename)
+            if (type === "throw" && Array.isArray(value) && value[2] === "DONE") {
+                assert.deepStrictEqual(value[0], value[1])
             } else {
-                throw err;
+                throw value;
             }
+        } catch (err) {
+            console.log('failed', err)
+            process.exit(1);
         }
     }
     console.log('success')

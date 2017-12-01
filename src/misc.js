@@ -42,17 +42,17 @@ async function evaluateProgram(text, filename) {
         var code = Parser.readCode('global', '', text, false, filename);
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
-            throw new SyntaxError(e.message);
+            return CompletionValue("throw", new SyntaxError(e.message), empty);
         }
         if (e instanceof Parser.ReferenceError) {
-            throw new ReferenceError(e.message);
+            return CompletionValue("throw", new ReferenceError(e.message), empty);
         }
         throw e;
     }
     try {
         await enterExecutionContextForGlobalCode(code);
         var sourceElements = code.sourceElements;
-        if (sourceElements === undefined) return;
+        if (sourceElements === undefined) return CompletionValue("normal", undefined, empty);
         try {
             var ctx = new CompilerContext("");
             sourceElements.compile(ctx);
@@ -64,9 +64,10 @@ async function evaluateProgram(text, filename) {
         }
         try {
             await evaluate();
+            return CompletionValue("normal", undefined, empty);
         } catch (V) {
             if (isInternalError(V)) throw V;
-            throw exportValue(V, createDefaultExportMap());
+            return CompletionValue("throw", exportValue(V), empty);
         }
     } finally {
         exitExecutionContext();
@@ -81,10 +82,10 @@ async function evaluateFunction(parameterText, codeText, filename, args) {
         var code = Parser.readCode("function", parameterText, codeText, false, filename);
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
-            throw new SyntaxError(e.message);
+            return CompletionValue("throw", new SyntaxError(e.message), empty);
         }
         if (e instanceof Parser.ReferenceError) {
-            throw new ReferenceError(e.message);
+            return CompletionValue("throw", new ReferenceError(e.message), empty);
         }
         throw e;
     }
@@ -96,10 +97,10 @@ async function evaluateFunction(parameterText, codeText, filename, args) {
     var F = CreateFunction(code, realm.theGlobalEnvironment);
     try {
         var r = await F.Call(null, argumentsList);
-        return exportValue(r, createDefaultExportMap());
+        return CompletionValue("normal", exportValue(r), empty);
     } catch (V) {
         if (isInternalError(V)) throw V;
-        throw exportValue(V, createDefaultExportMap());
+        return CompletionValue("throw", exportValue(V), empty);
     }
 }
 
@@ -123,6 +124,7 @@ function createDefaultExportMap() {
 }
 
 function exportValue(A, map) {
+    if (!map) map = createDefaultExportMap();
     if (isPrimitiveValue(A)) {
         return A;
     }
@@ -258,6 +260,7 @@ function createDefaultImportMap() {
 }
 
 function importValue(A, map) {
+    if (!map) map = createDefaultImportMap();
     if (isPrimitiveValue(A)) {
         return A;
     }
