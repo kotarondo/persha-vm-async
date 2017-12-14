@@ -162,6 +162,7 @@ function CompilerContext(params) {
 CompilerContext.prototype.compileExpression = function(expr) {
     assert(expr.compile, expr); // check if all expressions have own compilers
     if (expr.compile) {
+        this.text("--stepsLimit;");
         return expr.compile(this);
     }
     // compiler doesn't exist (under development)
@@ -173,6 +174,7 @@ CompilerContext.prototype.compileStatement = function(stmt) {
     assert(stmt.compile, stmt); // check if all statements have own compilers
     // this.text("if(debug_stack_id!==global_debug_stack_id) assert(false," + (++debug_index) + ");");
     if (stmt.compile) {
+        this.text("--stepsLimit;");
         stmt.compile(this);
         return;
     }
@@ -617,7 +619,7 @@ CompilerContext.prototype.compileEvaluateArguments = function(args) {
 };
 
 CompilerContext.prototype.compileRunningPos = function(pos) {
-    this.text("runningSourcePos= " + pos + ";");
+    this.text("setRunningPosCompiled(" + pos + ");");
 };
 
 CompilerContext.prototype.openLabel = function(identifier) {

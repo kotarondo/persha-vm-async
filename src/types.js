@@ -831,11 +831,17 @@ function defineWritable(obj, name, value) {
 }
 
 function defineCall(obj, func) {
-    obj.Call = func;
+    obj.Call = function(thisValue, argumentsList) {
+        setRunningPos();
+        return func(thisValue, argumentsList);
+    };
 }
 
 function defineConstruct(obj, func) {
-    obj.Construct = func;
+    obj.Construct = function(argumentsList) {
+        setRunningPos();
+        return func(argumentsList);
+    };
 }
 
 function defineFunction(obj, name, length, func) {

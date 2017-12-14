@@ -191,18 +191,24 @@ var runningCode;
 var runningSourcePos;
 var outerExecutionContext;
 var stackDepth = 0;
-
+var stepsLimit;
 var stackDepthLimit = 400;
 
-/*
-var _runningSourcePos;
-Object.defineProperty(global, "runningSourcePos", {
-    get: () => _runningSourcePos,
-    set: p => (_runningSourcePos = p, console.log("runningSourcePos=" + p)),
-    enumerable: true,
-    configurable: true,
-});
-*/
+function setRunningPos(pos) {
+    if (0 <= pos) runningSourcePos = pos;
+    if (stepsLimit < 0) {
+        throw VMRangeError("steps overflow");
+    }
+    stepsLimit -= 1000;
+}
+
+function setRunningPosCompiled(pos) {
+    if (0 <= pos) runningSourcePos = pos;
+    if (stepsLimit < 0) {
+        throw VMRangeError("steps overflow");
+    }
+    stepsLimit -= 1;
+}
 
 function saveExecutionContext() {
     if (stackDepth >= stackDepthLimit) {

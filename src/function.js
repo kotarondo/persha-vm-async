@@ -119,7 +119,7 @@ async function Function_ClassCall(thisValue, argumentsList) {
         }
         runningFunction = F;
         runningCode = code;
-        runningSourcePos = 0;
+        setRunningPos(0);
         /*
         var saved = global_debug_stack_id;
         var stack_id = ++debug_index;
