@@ -194,10 +194,14 @@ var stackDepth = 0;
 var stepsLimit;
 var stackDepthLimit = 400;
 
+function ErrorCapsule(error) {
+    this.error = error;
+}
+
 function setRunningPos(pos) {
     if (0 <= pos) runningSourcePos = pos;
     if (stepsLimit < 0) {
-        throw VMRangeError("steps overflow");
+        throw new ErrorCapsule(VMRangeError("steps overflow"));
     }
     stepsLimit -= 1000;
 }
@@ -205,7 +209,7 @@ function setRunningPos(pos) {
 function setRunningPosCompiled(pos) {
     if (0 <= pos) runningSourcePos = pos;
     if (stepsLimit < 0) {
-        throw VMRangeError("steps overflow");
+        throw new ErrorCapsule(VMRangeError("steps overflow"));
     }
     stepsLimit -= 1;
 }

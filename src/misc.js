@@ -42,10 +42,14 @@ async function evaluateProgram(text, filename) {
         var code = Parser.readCode('global', '', text, false, filename);
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
-            return CompletionValue("throw", new SyntaxError(e.message), empty);
+            var err = new SyntaxError(e.message);
+            err.stack = e.message;
+            return CompletionValue("throw", err, empty);
         }
         if (e instanceof Parser.ReferenceError) {
-            return CompletionValue("throw", new ReferenceError(e.message), empty);
+            var err = new ReferenceError(e.message);
+            err.stack = e.message;
+            return CompletionValue("throw", err, empty);
         }
         throw e;
     }
@@ -66,6 +70,7 @@ async function evaluateProgram(text, filename) {
             await evaluate();
             return CompletionValue("normal", undefined, empty);
         } catch (V) {
+            if (V instanceof ErrorCapsule) V = V.error;
             if (isInternalError(V)) throw V;
             return CompletionValue("throw", exportValue(V), empty);
         }
@@ -82,10 +87,14 @@ async function evaluateFunction(parameterText, codeText, filename, args) {
         var code = Parser.readCode("function", parameterText, codeText, false, filename);
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
-            return CompletionValue("throw", new SyntaxError(e.message), empty);
+            var err = new SyntaxError(e.message);
+            err.stack = e.message;
+            return CompletionValue("throw", err, empty);
         }
         if (e instanceof Parser.ReferenceError) {
-            return CompletionValue("throw", new ReferenceError(e.message), empty);
+            var err = new ReferenceError(e.message);
+            err.stack = e.message;
+            return CompletionValue("throw", err, empty);
         }
         throw e;
     }
@@ -99,6 +108,7 @@ async function evaluateFunction(parameterText, codeText, filename, args) {
         var r = await F.Call(null, argumentsList);
         return CompletionValue("normal", exportValue(r), empty);
     } catch (V) {
+        if (V instanceof ErrorCapsule) V = V.error;
         if (isInternalError(V)) throw V;
         return CompletionValue("throw", exportValue(V), empty);
     }

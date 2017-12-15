@@ -779,15 +779,15 @@ function TryStatement(block, catchBlock, finallyBlock) {
     }
 
     function compile(ctx) {
-        ctx.text("try{var internal_err;");
+        ctx.text("try{var interr;");
         ctx.compileStatement(block);
         ctx.text("}catch(err){");
-        ctx.text("if(isInternalError(err)){internal_err=err;throw err;}");
+        ctx.text("if(isInternalError(err)){interr=err;throw err;}");
         if (catchBlock) {
             catchBlock.compile(ctx);
         }
         if (finallyBlock) {
-            ctx.text("}finally{if(internal_err)return;");
+            ctx.text("}finally{if(interr)throw interr;");
             ctx.compileStatement(finallyBlock);
         }
         ctx.text("}");
