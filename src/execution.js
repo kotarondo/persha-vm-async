@@ -215,9 +215,6 @@ function setRunningPosCompiled(pos) {
 }
 
 function saveExecutionContext() {
-    if (stackDepth >= stackDepthLimit) {
-        throw VMRangeError("stack overflow");
-    }
     stackDepth++;
     outerExecutionContext = ({
         LexicalEnvironment,
@@ -228,6 +225,9 @@ function saveExecutionContext() {
         runningSourcePos,
         outerExecutionContext,
     });
+    if (stackDepth > stackDepthLimit) {
+        throw VMRangeError("stack overflow");
+    }
 }
 
 function exitExecutionContext() {
