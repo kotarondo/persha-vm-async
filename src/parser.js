@@ -158,10 +158,7 @@ const Parser = (function() {
             code.varEnv = varEnv;
         } else {
             assert(type === "function", type);
-            source = parameterText;
-            setPosition(0);
-            skipSpaces();
-            proceedToken();
+            setup(type, '', parameterText, strictMode, filename + '(parameters)');
             var parameters = [];
             if (token !== undefined) {
                 while (true) {

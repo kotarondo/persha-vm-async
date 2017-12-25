@@ -43,13 +43,11 @@ async function evaluateProgram(text, filename) {
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
             var err = new SyntaxError(e.message);
-            err.stack = e.message;
-            return CompletionValue("throw", err, empty);
+            return CompletionValue("throw", err.toString(), empty);
         }
         if (e instanceof Parser.ReferenceError) {
             var err = new ReferenceError(e.message);
-            err.stack = e.message;
-            return CompletionValue("throw", err, empty);
+            return CompletionValue("throw", err.toString(), empty);
         }
         throw e;
     }
@@ -88,13 +86,11 @@ async function evaluateFunction(parameterText, codeText, filename, args) {
     } catch (e) {
         if (e instanceof Parser.SyntaxError) {
             var err = new SyntaxError(e.message);
-            err.stack = e.message;
-            return CompletionValue("throw", err, empty);
+            return CompletionValue("throw", err.toString(), empty);
         }
         if (e instanceof Parser.ReferenceError) {
             var err = new ReferenceError(e.message);
-            err.stack = e.message;
-            return CompletionValue("throw", err, empty);
+            return CompletionValue("throw", err.toString(), empty);
         }
         throw e;
     }
