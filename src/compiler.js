@@ -601,7 +601,8 @@ CompilerContext.prototype.compileToObject = function(val) {
 CompilerContext.prototype.compileToPrimitive = function(val, hint) {
     if (val.types.isPrimitive()) return val;
     if (hint) {
-        return this.definePrimitive("await ToPrimitive(" + val.name + "," + hint + ")");
+        return this.definePrimitive("typeof " + val.name + "!=='object'?" + val.name + //
+            ":await ToPrimitive(" + val.name + "," + hint + ")");
     } else {
         return this.definePrimitive("typeof " + val.name + "!=='object'?" + val.name + //
             ":await ToPrimitive(" + val.name + ")");
