@@ -86,7 +86,11 @@ function RealmClass(Class) {
 }
 
 function intrinsic_realmCreateData(O, P, Value, Writable, Enumerable, Configurable) {
-    O.predefined[P] = { Value, Writable, Get: absent, Set: absent, Enumerable, Configurable };
+    Object.defineProperty(O.predefined, P, { get: getf, enumerable: true, configurable: true });
+
+    function getf() {
+        return { Value, Writable, Get: absent, Set: absent, Enumerable, Configurable };
+    }
 }
 
 function intrinsic_realmCreateDataRefRealm(O, P, Value, Writable, Enumerable, Configurable) {
@@ -116,8 +120,6 @@ function realmDefineAccessor(O, P, get, set) {
     Object.defineProperty(O.predefined, P, { get: getf, enumerable: true, configurable: true });
 
     function getf() {
-        var Get = absent;
-        var Set = absent;
         if (get !== undefined) {
             var Get = VMObject(Class_BuiltinFunction);
             Get.Prototype = realm.Function_prototype;
