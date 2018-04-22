@@ -34,7 +34,7 @@
 function assert(condition, info) {
     if (!condition) {
         var err = new Error("NG: assertion failed: " + info);
-        var code = runningCode.evaluate.toString();
+        var code = runningCode && runningCode.evaluate && runningCode.evaluate.toString();
         console.error(info, code, err);
         debugger;
         process.exit(255);

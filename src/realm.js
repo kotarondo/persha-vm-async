@@ -35,474 +35,605 @@
 
 var realm;
 
-function initializeRealm() {
+function createRealmObject(realmC) {
+    var { predefined } = realmC;
+    var deleted = Object.create(null);
+    var target = Object.create(null);
+    var proxyHandler = {
+        getOwnPropertyDescriptor: function(target, P) {
+            var v = proxyHandler.get(target, P);
+            if (!v) return undefined;
+            return { value: v, writable: true, enumerable: true, configurable: true };
+        },
+        has: function(target, P) {
+            assert(false, 'proxy');
+        },
+        get: function(target, P) {
+            var v = target[P];
+            if (v) return v;
+            if (deleted[P]) return undefined;
+            var v = predefined[P];
+            if (v) target[P] = v;
+            return v;
+        },
+        deleteProperty: function(target, P) {
+            if (P in predefined) deleted[P] = true;
+            delete target[P];
+            return true;
+        },
+        ownKeys: function(target) {
+            var list = [];
+            for (var P in predefined) {
+                if (!deleted[P]) list.push(P);
+            }
+            for (var P in target) {
+                if (deleted[P] || !(P in predefined)) list.push(P);
+            }
+            return list;
+        },
+    };
+    var obj = Object.create(realmC.Class);
+    obj.properties = new Proxy(target, proxyHandler);
+    obj.Prototype = null;
+    obj.Extensible = true;
+    obj.numProps = 0;
+    return obj;
+}
+
+function RealmClass(Class) {
+    var predefined = Object.create(null);
+    return { Class, predefined };
+}
+
+function intrinsic_realmCreateData(O, P, Value, Writable, Enumerable, Configurable) {
+    O.predefined[P] = { Value, Writable, Get: absent, Set: absent, Enumerable, Configurable };
+}
+
+function intrinsic_realmCreateDataRefRealm(O, P, Value, Writable, Enumerable, Configurable) {
+    Object.defineProperty(O.predefined, P, { get: getf, enumerable: true, configurable: true });
+
+    function getf() {
+        assert(realm[Value], Value);
+        return { Value: realm[Value], Writable, Get: absent, Set: absent, Enumerable, Configurable };
+    }
+}
+
+function realmDefineFunction(O, P, length, func) {
+    Object.defineProperty(O.predefined, P, { get: getf, enumerable: true, configurable: true });
+
+    function getf() {
+        var F = VMObject(Class_BuiltinFunction);
+        F.Prototype = realm.Function_prototype;
+        F.Extensible = true;
+        defineCall(F, func);
+        defineFinal(F, "length", length);
+        defineFinal(F, "name", P);
+        return { Value: F, Writable: true, Get: absent, Set: absent, Enumerable: false, Configurable: true };
+    }
+}
+
+function realmDefineAccessor(O, P, get, set) {
+    Object.defineProperty(O.predefined, P, { get: getf, enumerable: true, configurable: true });
+
+    function getf() {
+        var Get = absent;
+        var Set = absent;
+        if (get !== undefined) {
+            var Get = VMObject(Class_BuiltinFunction);
+            Get.Prototype = realm.Function_prototype;
+            Get.Extensible = true;
+            defineCall(Get, get);
+            defineFinal(Get, "length", 0);
+            defineFinal(Get, "name", "get " + P);
+        }
+        if (set !== undefined) {
+            var Set = VMObject(Class_BuiltinFunction);
+            Set.Prototype = realm.Function_prototype;
+            Set.Extensible = true;
+            defineCall(Set, set);
+            defineFinal(Set, "length", 1);
+            defineFinal(Set, "name", "set " + P);
+        }
+        return { Value: absent, Writable: absent, Get, Set, Enumerable: false, Configurable: true };
+    }
+}
+
+function realmDefine(obj, name, value) {
+    intrinsic_realmCreateData(obj, name, value, true, false, true);
+}
+
+function realmDefineFinal(obj, name, value) {
+    intrinsic_realmCreateData(obj, name, value, false, false, false);
+}
+
+function realmDefineWritable(obj, name, value) {
+    intrinsic_realmCreateData(obj, name, value, true, false, false);
+}
+
+function realmDefineRefRealm(obj, name, value) {
+    intrinsic_realmCreateDataRefRealm(obj, name, value, true, false, true);
+}
+
+function realmDefineFinalRefRealm(obj, name, value) {
+    intrinsic_realmCreateDataRefRealm(obj, name, value, false, false, false);
+}
+
+function initializeRealmClass() {
+    var realmC = {};
+
+    realmC.Object_prototype = RealmClass(Class_Object);
+    realmC.Function_prototype = RealmClass(Class_BuiltinFunction);
+    realmC.Array_prototype = RealmClass(Class_Array);
+    realmC.String_prototype = RealmClass(Class_String);
+    realmC.Boolean_prototype = RealmClass(Class_Boolean);
+    realmC.Number_prototype = RealmClass(Class_Number);
+    realmC.Date_prototype = RealmClass(Class_Date);
+    realmC.RegExp_prototype = RealmClass(Class_RegExp);
+    realmC.Error_prototype = RealmClass(Class_Error);
+    realmC.EvalError_prototype = RealmClass(Class_Error);
+    realmC.RangeError_prototype = RealmClass(Class_Error);
+    realmC.ReferenceError_prototype = RealmClass(Class_Error);
+    realmC.SyntaxError_prototype = RealmClass(Class_Error);
+    realmC.TypeError_prototype = RealmClass(Class_Error);
+    realmC.URIError_prototype = RealmClass(Class_Error);
+    realmC.Object = RealmClass(Class_BuiltinFunction);
+    realmC.Function = RealmClass(Class_BuiltinFunction);
+    realmC.Array = RealmClass(Class_BuiltinFunction);
+    realmC.String = RealmClass(Class_BuiltinFunction);
+    realmC.Boolean = RealmClass(Class_BuiltinFunction);
+    realmC.Number = RealmClass(Class_BuiltinFunction);
+    realmC.Math = RealmClass(Class_Math);
+    realmC.Date = RealmClass(Class_BuiltinFunction);
+    realmC.RegExp = RealmClass(Class_BuiltinFunction);
+    realmC.Error = RealmClass(Class_BuiltinFunction);
+    realmC.EvalError = RealmClass(Class_BuiltinFunction);
+    realmC.RangeError = RealmClass(Class_BuiltinFunction);
+    realmC.ReferenceError = RealmClass(Class_BuiltinFunction);
+    realmC.SyntaxError = RealmClass(Class_BuiltinFunction);
+    realmC.TypeError = RealmClass(Class_BuiltinFunction);
+    realmC.URIError = RealmClass(Class_BuiltinFunction);
+    realmC.JSON = RealmClass(Class_JSON);
+    realmC.theGlobalObject = RealmClass(Class_Global);
+
+    realmDefineFinal(realmC.theGlobalObject, "NaN", NaN);
+    realmDefineFinal(realmC.theGlobalObject, "Infinity", Infinity);
+    realmDefineFinal(realmC.theGlobalObject, "undefined", undefined);
+    realmDefineFunction(realmC.theGlobalObject, "eval", 1, Global_eval);
+    realmDefineFunction(realmC.theGlobalObject, "parseInt", 2, Global_parseInt);
+    realmDefineFunction(realmC.theGlobalObject, "parseFloat", 1, Global_parseFloat);
+    realmDefineFunction(realmC.theGlobalObject, "isNaN", 1, Global_isNaN);
+    realmDefineFunction(realmC.theGlobalObject, "isFinite", 1, Global_isFinite);
+    realmDefineFunction(realmC.theGlobalObject, "decodeURI", 1, Global_decodeURI);
+    realmDefineFunction(realmC.theGlobalObject, "decodeURIComponent", 1, Global_decodeURIComponent);
+    realmDefineFunction(realmC.theGlobalObject, "encodeURI", 1, Global_encodeURI);
+    realmDefineFunction(realmC.theGlobalObject, "encodeURIComponent", 1, Global_encodeURIComponent);
+    realmDefineFunction(realmC.theGlobalObject, "escape", 1, Global_escape);
+    realmDefineFunction(realmC.theGlobalObject, "unescape", 1, Global_unescape);
+    realmDefineRefRealm(realmC.theGlobalObject, "Object", "Object");
+    realmDefineRefRealm(realmC.theGlobalObject, "Function", "Function");
+    realmDefineRefRealm(realmC.theGlobalObject, "Array", "Array");
+    realmDefineRefRealm(realmC.theGlobalObject, "String", "String");
+    realmDefineRefRealm(realmC.theGlobalObject, "Boolean", "Boolean");
+    realmDefineRefRealm(realmC.theGlobalObject, "Number", "Number");
+    realmDefineRefRealm(realmC.theGlobalObject, "Math", "Math");
+    realmDefineRefRealm(realmC.theGlobalObject, "Date", "Date");
+    realmDefineRefRealm(realmC.theGlobalObject, "RegExp", "RegExp");
+    realmDefineRefRealm(realmC.theGlobalObject, "Error", "Error");
+    realmDefineRefRealm(realmC.theGlobalObject, "EvalError", "EvalError");
+    realmDefineRefRealm(realmC.theGlobalObject, "RangeError", "RangeError");
+    realmDefineRefRealm(realmC.theGlobalObject, "ReferenceError", "ReferenceError");
+    realmDefineRefRealm(realmC.theGlobalObject, "SyntaxError", "SyntaxError");
+    realmDefineRefRealm(realmC.theGlobalObject, "TypeError", "TypeError");
+    realmDefineRefRealm(realmC.theGlobalObject, "URIError", "URIError");
+    realmDefineRefRealm(realmC.theGlobalObject, "JSON", "JSON");
+
+    realmDefineFinal(realmC.Object, "length", 1);
+    realmDefineFinalRefRealm(realmC.Object, "prototype", "Object_prototype");
+    realmDefineFunction(realmC.Object, "getPrototypeOf", 1, Object_getPrototypeOf);
+    realmDefineFunction(realmC.Object, "getOwnPropertyDescriptor", 2, Object_getOwnPropertyDescriptor);
+    realmDefineFunction(realmC.Object, "getOwnPropertyNames", 1, Object_getOwnPropertyNames);
+    realmDefineFunction(realmC.Object, "create", 2, Object_create);
+    realmDefineFunction(realmC.Object, "defineProperty", 3, Object_defineProperty);
+    realmDefineFunction(realmC.Object, "defineProperties", 2, Object_defineProperties);
+    realmDefineFunction(realmC.Object, "seal", 1, Object_seal);
+    realmDefineFunction(realmC.Object, "freeze", 1, Object_freeze);
+    realmDefineFunction(realmC.Object, "preventExtensions", 1, Object_preventExtensions);
+    realmDefineFunction(realmC.Object, "isSealed", 1, Object_isSealed);
+    realmDefineFunction(realmC.Object, "isFrozen", 1, Object_isFrozen);
+    realmDefineFunction(realmC.Object, "isExtensible", 1, Object_isExtensible);
+    realmDefineFunction(realmC.Object, "keys", 1, Object_keys);
+    realmDefineRefRealm(realmC.Object_prototype, "constructor", "Object");
+    realmDefineFunction(realmC.Object_prototype, "toString", 0, Object_prototype_toString);
+    realmDefineFunction(realmC.Object_prototype, "toLocaleString", 0, Object_prototype_toLocaleString);
+    realmDefineFunction(realmC.Object_prototype, "valueOf", 0, Object_prototype_valueOf);
+    realmDefineFunction(realmC.Object_prototype, "hasOwnProperty", 1, Object_prototype_hasOwnProperty);
+    realmDefineFunction(realmC.Object_prototype, "isPrototypeOf", 1, Object_prototype_isPrototypeOf);
+    realmDefineFunction(realmC.Object_prototype, "propertyIsEnumerable", 1, Object_prototype_propertyIsEnumerable);
+    realmDefineAccessor(realmC.Object_prototype, "__proto__", get_Object_prototype___proto__, set_Object_prototype___proto__);
+
+    realmDefineFinal(realmC.Function, "length", 1);
+    realmDefineFinalRefRealm(realmC.Function, "prototype", "Function_prototype");
+    realmDefineFinal(realmC.Function_prototype, "length", 0);
+    realmDefineRefRealm(realmC.Function_prototype, "constructor", "Function");
+    realmDefineFunction(realmC.Function_prototype, "toString", 0, Function_prototype_toString);
+    realmDefineFunction(realmC.Function_prototype, "apply", 2, Function_prototype_apply);
+    realmDefineFunction(realmC.Function_prototype, "call", 1, Function_prototype_call);
+    realmDefineFunction(realmC.Function_prototype, "bind", 1, Function_prototype_bind);
+    realmDefineAccessor(realmC.Function_prototype, "name", get_Function_prototype_name, undefined);
+
+    realmDefineFinal(realmC.Array, "length", 1);
+    realmDefineFinalRefRealm(realmC.Array, "prototype", "Array_prototype");
+    realmDefineFunction(realmC.Array, "isArray", 1, Array_isArray);
+    realmDefineWritable(realmC.Array_prototype, "length", 0);
+    realmDefineRefRealm(realmC.Array_prototype, "constructor", "Array");
+    realmDefineFunction(realmC.Array_prototype, "toString", 0, Array_prototype_toString);
+    realmDefineFunction(realmC.Array_prototype, "toLocaleString", 0, Array_prototype_toLocaleString);
+    realmDefineFunction(realmC.Array_prototype, "concat", 1, Array_prototype_concat);
+    realmDefineFunction(realmC.Array_prototype, "join", 1, Array_prototype_join);
+    realmDefineFunction(realmC.Array_prototype, "pop", 0, Array_prototype_pop);
+    realmDefineFunction(realmC.Array_prototype, "push", 1, Array_prototype_push);
+    realmDefineFunction(realmC.Array_prototype, "reverse", 0, Array_prototype_reverse);
+    realmDefineFunction(realmC.Array_prototype, "shift", 0, Array_prototype_shift);
+    realmDefineFunction(realmC.Array_prototype, "slice", 2, Array_prototype_slice);
+    realmDefineFunction(realmC.Array_prototype, "sort", 1, Array_prototype_sort);
+    realmDefineFunction(realmC.Array_prototype, "splice", 2, Array_prototype_splice);
+    realmDefineFunction(realmC.Array_prototype, "unshift", 1, Array_prototype_unshift);
+    realmDefineFunction(realmC.Array_prototype, "indexOf", 1, Array_prototype_indexOf);
+    realmDefineFunction(realmC.Array_prototype, "lastIndexOf", 1, Array_prototype_lastIndexOf);
+    realmDefineFunction(realmC.Array_prototype, "every", 1, Array_prototype_every);
+    realmDefineFunction(realmC.Array_prototype, "some", 1, Array_prototype_some);
+    realmDefineFunction(realmC.Array_prototype, "forEach", 1, Array_prototype_forEach);
+    realmDefineFunction(realmC.Array_prototype, "map", 1, Array_prototype_map);
+    realmDefineFunction(realmC.Array_prototype, "filter", 1, Array_prototype_filter);
+    realmDefineFunction(realmC.Array_prototype, "reduce", 1, Array_prototype_reduce);
+    realmDefineFunction(realmC.Array_prototype, "reduceRight", 1, Array_prototype_reduceRight);
+
+    realmDefineFinal(realmC.String, "length", 1);
+    realmDefineFinalRefRealm(realmC.String, "prototype", "String_prototype");
+    realmDefineFunction(realmC.String, "fromCharCode", 1, String_fromCharCode);
+    realmDefineFinal(realmC.String_prototype, "length", 0);
+    realmDefineRefRealm(realmC.String_prototype, "constructor", "String");
+    realmDefineFunction(realmC.String_prototype, "toString", 0, String_prototype_toString);
+    realmDefineFunction(realmC.String_prototype, "valueOf", 0, String_prototype_valueOf);
+    realmDefineFunction(realmC.String_prototype, "charAt", 1, String_prototype_charAt);
+    realmDefineFunction(realmC.String_prototype, "charCodeAt", 1, String_prototype_charCodeAt);
+    realmDefineFunction(realmC.String_prototype, "concat", 1, String_prototype_concat);
+    realmDefineFunction(realmC.String_prototype, "indexOf", 1, String_prototype_indexOf);
+    realmDefineFunction(realmC.String_prototype, "lastIndexOf", 1, String_prototype_lastIndexOf);
+    realmDefineFunction(realmC.String_prototype, "localeCompare", 1, String_prototype_localeCompare);
+    realmDefineFunction(realmC.String_prototype, "match", 1, String_prototype_match);
+    realmDefineFunction(realmC.String_prototype, "replace", 2, String_prototype_replace);
+    realmDefineFunction(realmC.String_prototype, "search", 1, String_prototype_search);
+    realmDefineFunction(realmC.String_prototype, "slice", 2, String_prototype_slice);
+    realmDefineFunction(realmC.String_prototype, "split", 2, String_prototype_split);
+    realmDefineFunction(realmC.String_prototype, "substring", 2, String_prototype_substring);
+    realmDefineFunction(realmC.String_prototype, "toLowerCase", 0, String_prototype_toLowerCase);
+    realmDefineFunction(realmC.String_prototype, "toLocaleLowerCase", 0, String_prototype_toLocaleLowerCase);
+    realmDefineFunction(realmC.String_prototype, "toUpperCase", 0, String_prototype_toUpperCase);
+    realmDefineFunction(realmC.String_prototype, "toLocaleUpperCase", 0, String_prototype_toLocaleUpperCase);
+    realmDefineFunction(realmC.String_prototype, "trim", 0, String_prototype_trim);
+    realmDefineFunction(realmC.String_prototype, "substr", 2, String_prototype_substr);
+
+    realmDefineFinal(realmC.Boolean, "length", 1);
+    realmDefineFinalRefRealm(realmC.Boolean, "prototype", "Boolean_prototype");
+    realmDefineRefRealm(realmC.Boolean_prototype, "constructor", "Boolean");
+    realmDefineFunction(realmC.Boolean_prototype, "toString", 0, Boolean_prototype_toString);
+    realmDefineFunction(realmC.Boolean_prototype, "valueOf", 0, Boolean_prototype_valueOf);
+
+    realmDefineFinal(realmC.Number, "length", 1);
+    realmDefineFinalRefRealm(realmC.Number, "prototype", "Number_prototype");
+    realmDefineFinal(realmC.Number, "MAX_VALUE", Number.MAX_VALUE);
+    realmDefineFinal(realmC.Number, "MIN_VALUE", Number.MIN_VALUE);
+    realmDefineFinal(realmC.Number, "NaN", NaN);
+    realmDefineFinal(realmC.Number, "POSITIVE_INFINITY", Infinity);
+    realmDefineFinal(realmC.Number, "NEGATIVE_INFINITY", -Infinity);
+    realmDefineRefRealm(realmC.Number_prototype, "constructor", "Number");
+    realmDefineFunction(realmC.Number_prototype, "toString", 0, Number_prototype_toString);
+    realmDefineFunction(realmC.Number_prototype, "toLocaleString", 0, Number_prototype_toLocaleString);
+    realmDefineFunction(realmC.Number_prototype, "valueOf", 0, Number_prototype_valueOf);
+    realmDefineFunction(realmC.Number_prototype, "toFixed", 1, Number_prototype_toFixed);
+    realmDefineFunction(realmC.Number_prototype, "toExponential", 1, Number_prototype_toExponential);
+    realmDefineFunction(realmC.Number_prototype, "toPrecision", 1, Number_prototype_toPrecision);
+
+    realmDefineFinal(realmC.Math, "E", Math.E);
+    realmDefineFinal(realmC.Math, "LN10", Math.LN10);
+    realmDefineFinal(realmC.Math, "LN2", Math.LN2);
+    realmDefineFinal(realmC.Math, "LOG2E", Math.LOG2E);
+    realmDefineFinal(realmC.Math, "LOG10E", Math.LOG10E);
+    realmDefineFinal(realmC.Math, "PI", Math.PI);
+    realmDefineFinal(realmC.Math, "SQRT1_2", Math.SQRT1_2);
+    realmDefineFinal(realmC.Math, "SQRT2", Math.SQRT2);
+    realmDefineFunction(realmC.Math, "abs", 1, Math_abs);
+    realmDefineFunction(realmC.Math, "acos", 1, Math_acos);
+    realmDefineFunction(realmC.Math, "asin", 1, Math_asin);
+    realmDefineFunction(realmC.Math, "atan", 1, Math_atan);
+    realmDefineFunction(realmC.Math, "atan2", 2, Math_atan2);
+    realmDefineFunction(realmC.Math, "ceil", 1, Math_ceil);
+    realmDefineFunction(realmC.Math, "cos", 1, Math_cos);
+    realmDefineFunction(realmC.Math, "exp", 1, Math_exp);
+    realmDefineFunction(realmC.Math, "floor", 1, Math_floor);
+    realmDefineFunction(realmC.Math, "log", 1, Math_log);
+    realmDefineFunction(realmC.Math, "max", 2, Math_max);
+    realmDefineFunction(realmC.Math, "min", 2, Math_min);
+    realmDefineFunction(realmC.Math, "pow", 2, Math_pow);
+    realmDefineFunction(realmC.Math, "random", 0, Math_random);
+    realmDefineFunction(realmC.Math, "round", 1, Math_round);
+    realmDefineFunction(realmC.Math, "sin", 1, Math_sin);
+    realmDefineFunction(realmC.Math, "sqrt", 1, Math_sqrt);
+    realmDefineFunction(realmC.Math, "tan", 1, Math_tan);
+
+    realmDefineFinal(realmC.Date, "length", 7);
+    realmDefineFinalRefRealm(realmC.Date, "prototype", "Date_prototype");
+    realmDefineFunction(realmC.Date, "parse", 1, Date_parse);
+    realmDefineFunction(realmC.Date, "UTC", 7, Date_UTC);
+    realmDefineFunction(realmC.Date, "now", 0, Date_now);
+    realmDefineRefRealm(realmC.Date_prototype, "constructor", "Date");
+    realmDefineFunction(realmC.Date_prototype, "toString", 0, Date_prototype_toString);
+    realmDefineFunction(realmC.Date_prototype, "toDateString", 0, Date_prototype_toDateString);
+    realmDefineFunction(realmC.Date_prototype, "toTimeString", 0, Date_prototype_toTimeString);
+    realmDefineFunction(realmC.Date_prototype, "toLocaleString", 0, Date_prototype_toLocaleString);
+    realmDefineFunction(realmC.Date_prototype, "toLocaleDateString", 0, Date_prototype_toLocaleDateString);
+    realmDefineFunction(realmC.Date_prototype, "toLocaleTimeString", 0, Date_prototype_toLocaleTimeString);
+    realmDefineFunction(realmC.Date_prototype, "valueOf", 0, Date_prototype_valueOf);
+    realmDefineFunction(realmC.Date_prototype, "getTime", 0, Date_prototype_getTime);
+    realmDefineFunction(realmC.Date_prototype, "getFullYear", 0, Date_prototype_getFullYear);
+    realmDefineFunction(realmC.Date_prototype, "getUTCFullYear", 0, Date_prototype_getUTCFullYear);
+    realmDefineFunction(realmC.Date_prototype, "getMonth", 0, Date_prototype_getMonth);
+    realmDefineFunction(realmC.Date_prototype, "getUTCMonth", 0, Date_prototype_getUTCMonth);
+    realmDefineFunction(realmC.Date_prototype, "getDate", 0, Date_prototype_getDate);
+    realmDefineFunction(realmC.Date_prototype, "getUTCDate", 0, Date_prototype_getUTCDate);
+    realmDefineFunction(realmC.Date_prototype, "getDay", 0, Date_prototype_getDay);
+    realmDefineFunction(realmC.Date_prototype, "getUTCDay", 0, Date_prototype_getUTCDay);
+    realmDefineFunction(realmC.Date_prototype, "getHours", 0, Date_prototype_getHours);
+    realmDefineFunction(realmC.Date_prototype, "getUTCHours", 0, Date_prototype_getUTCHours);
+    realmDefineFunction(realmC.Date_prototype, "getMinutes", 0, Date_prototype_getMinutes);
+    realmDefineFunction(realmC.Date_prototype, "getUTCMinutes", 0, Date_prototype_getUTCMinutes);
+    realmDefineFunction(realmC.Date_prototype, "getSeconds", 0, Date_prototype_getSeconds);
+    realmDefineFunction(realmC.Date_prototype, "getUTCSeconds", 0, Date_prototype_getUTCSeconds);
+    realmDefineFunction(realmC.Date_prototype, "getMilliseconds", 0, Date_prototype_getMilliseconds);
+    realmDefineFunction(realmC.Date_prototype, "getUTCMilliseconds", 0, Date_prototype_getUTCMilliseconds);
+    realmDefineFunction(realmC.Date_prototype, "getTimezoneOffset", 0, Date_prototype_getTimezoneOffset);
+    realmDefineFunction(realmC.Date_prototype, "setTime", 1, Date_prototype_setTime);
+    realmDefineFunction(realmC.Date_prototype, "setMilliseconds", 1, Date_prototype_setMilliseconds);
+    realmDefineFunction(realmC.Date_prototype, "setUTCMilliseconds", 1, Date_prototype_setUTCMilliseconds);
+    realmDefineFunction(realmC.Date_prototype, "setSeconds", 2, Date_prototype_setSeconds);
+    realmDefineFunction(realmC.Date_prototype, "setUTCSeconds", 2, Date_prototype_setUTCSeconds);
+    realmDefineFunction(realmC.Date_prototype, "setMinutes", 3, Date_prototype_setMinutes);
+    realmDefineFunction(realmC.Date_prototype, "setUTCMinutes", 3, Date_prototype_setUTCMinutes);
+    realmDefineFunction(realmC.Date_prototype, "setHours", 4, Date_prototype_setHours);
+    realmDefineFunction(realmC.Date_prototype, "setUTCHours", 4, Date_prototype_setUTCHours);
+    realmDefineFunction(realmC.Date_prototype, "setDate", 1, Date_prototype_setDate);
+    realmDefineFunction(realmC.Date_prototype, "setUTCDate", 1, Date_prototype_setUTCDate);
+    realmDefineFunction(realmC.Date_prototype, "setMonth", 2, Date_prototype_setMonth);
+    realmDefineFunction(realmC.Date_prototype, "setUTCMonth", 2, Date_prototype_setUTCMonth);
+    realmDefineFunction(realmC.Date_prototype, "setFullYear", 3, Date_prototype_setFullYear);
+    realmDefineFunction(realmC.Date_prototype, "setUTCFullYear", 3, Date_prototype_setUTCFullYear);
+    realmDefineFunction(realmC.Date_prototype, "toUTCString", 0, Date_prototype_toUTCString);
+    realmDefineFunction(realmC.Date_prototype, "toISOString", 0, Date_prototype_toISOString);
+    realmDefineFunction(realmC.Date_prototype, "toJSON", 1, Date_prototype_toJSON);
+    realmDefineFunction(realmC.Date_prototype, "getYear", 0, Date_prototype_getYear);
+    realmDefineFunction(realmC.Date_prototype, "setYear", 1, Date_prototype_setYear);
+    realmDefineFunction(realmC.Date_prototype, "toGMTString", 0, Date_prototype_toUTCString);
+
+    realmDefineFinal(realmC.RegExp, "length", 2);
+    realmDefineFinalRefRealm(realmC.RegExp, "prototype", "RegExp_prototype");
+    realmDefineFinal(realmC.RegExp_prototype, "source", "(?:)");
+    realmDefineFinal(realmC.RegExp_prototype, "global", false);
+    realmDefineFinal(realmC.RegExp_prototype, "ignoreCase", false);
+    realmDefineFinal(realmC.RegExp_prototype, "multiline", false);
+    realmDefineWritable(realmC.RegExp_prototype, "lastIndex", 0);
+    realmDefineRefRealm(realmC.RegExp_prototype, "constructor", "RegExp");
+    realmDefineFunction(realmC.RegExp_prototype, "exec", 1, RegExp_prototype_exec);
+    realmDefineFunction(realmC.RegExp_prototype, "test", 1, RegExp_prototype_test);
+    realmDefineFunction(realmC.RegExp_prototype, "toString", 0, RegExp_prototype_toString);
+
+    realmDefineFinal(realmC.Error, "length", 1);
+    realmDefineFinalRefRealm(realmC.Error, "prototype", "Error_prototype");
+    realmDefineRefRealm(realmC.Error_prototype, "constructor", "Error");
+    realmDefine(realmC.Error_prototype, "name", "Error");
+    realmDefine(realmC.Error_prototype, "message", "");
+    realmDefineFunction(realmC.Error_prototype, "toString", 0, Error_prototype_toString);
+    realmDefineWritable(realmC.Error, "stackTraceLimit", 10);
+    realmDefineAccessor(realmC.Error_prototype, "stack", get_Error_prototype_stack, undefined);
+    realmDefineFunction(realmC.Error_prototype, "getStackTraceEntry", 1, Error_prototype_getStackTraceEntry);
+
+    realmDefineFinal(realmC.EvalError, "length", 1);
+    realmDefineFinalRefRealm(realmC.EvalError, "prototype", "EvalError_prototype");
+    realmDefineRefRealm(realmC.EvalError_prototype, "constructor", "EvalError");
+    realmDefine(realmC.EvalError_prototype, "name", "EvalError");
+    realmDefine(realmC.EvalError_prototype, "message", "");
+
+    realmDefineFinal(realmC.RangeError, "length", 1);
+    realmDefineFinalRefRealm(realmC.RangeError, "prototype", "RangeError_prototype");
+    realmDefineRefRealm(realmC.RangeError_prototype, "constructor", "RangeError");
+    realmDefine(realmC.RangeError_prototype, "name", "RangeError");
+    realmDefine(realmC.RangeError_prototype, "message", "");
+
+    realmDefineFinal(realmC.ReferenceError, "length", 1);
+    realmDefineFinalRefRealm(realmC.ReferenceError, "prototype", "ReferenceError_prototype");
+    realmDefineRefRealm(realmC.ReferenceError_prototype, "constructor", "ReferenceError");
+    realmDefine(realmC.ReferenceError_prototype, "name", "ReferenceError");
+    realmDefine(realmC.ReferenceError_prototype, "message", "");
+
+    realmDefineFinal(realmC.SyntaxError, "length", 1);
+    realmDefineFinalRefRealm(realmC.SyntaxError, "prototype", "SyntaxError_prototype");
+    realmDefineRefRealm(realmC.SyntaxError_prototype, "constructor", "SyntaxError");
+    realmDefine(realmC.SyntaxError_prototype, "name", "SyntaxError");
+    realmDefine(realmC.SyntaxError_prototype, "message", "");
+
+    realmDefineFinal(realmC.TypeError, "length", 1);
+    realmDefineFinalRefRealm(realmC.TypeError, "prototype", "TypeError_prototype");
+    realmDefineRefRealm(realmC.TypeError_prototype, "constructor", "TypeError");
+    realmDefine(realmC.TypeError_prototype, "name", "TypeError");
+    realmDefine(realmC.TypeError_prototype, "message", "");
+
+    realmDefineFinal(realmC.URIError, "length", 1);
+    realmDefineFinalRefRealm(realmC.URIError, "prototype", "URIError_prototype");
+    realmDefineRefRealm(realmC.URIError_prototype, "constructor", "URIError");
+    realmDefine(realmC.URIError_prototype, "name", "URIError");
+    realmDefine(realmC.URIError_prototype, "message", "");
+
+    realmDefineFunction(realmC.JSON, "parse", 2, JSON_parse);
+    realmDefineFunction(realmC.JSON, "stringify", 3, JSON_stringify);
+
+    realmDefineFinal(realmC.Object, "name", "Object");
+    realmDefineFinal(realmC.Function, "name", "Function");
+    realmDefineFinal(realmC.Array, "name", "Array");
+    realmDefineFinal(realmC.String, "name", "String");
+    realmDefineFinal(realmC.Boolean, "name", "Boolean");
+    realmDefineFinal(realmC.Number, "name", "Number");
+    realmDefineFinal(realmC.Date, "name", "Date");
+    realmDefineFinal(realmC.RegExp, "name", "RegExp");
+    realmDefineFinal(realmC.Error, "name", "Error");
+    realmDefineFinal(realmC.EvalError, "name", "EvalError");
+    realmDefineFinal(realmC.RangeError, "name", "RangeError");
+    realmDefineFinal(realmC.ReferenceError, "name", "ReferenceError");
+    realmDefineFinal(realmC.SyntaxError, "name", "SyntaxError");
+    realmDefineFinal(realmC.TypeError, "name", "TypeError");
+    realmDefineFinal(realmC.URIError, "name", "URIError");
+
+    return realmC;
+}
+
+function initializeRealm(realmC) {
     realm = {};
 
-    realm.Object_prototype = VMObject(Class_Object);
+    realm.Object_prototype = createRealmObject(realmC.Object_prototype);
     realm.Object_prototype.Prototype = null;
-    realm.Object_prototype.Extensible = true;
 
-    realm.Function_prototype = VMObject(Class_BuiltinFunction);
+    realm.Function_prototype = createRealmObject(realmC.Function_prototype);
     realm.Function_prototype.Prototype = realm.Object_prototype;
-    realm.Function_prototype.Extensible = true;
     defineCall(realm.Function_prototype, ReturnUndefined);
 
-    realm.Array_prototype = VMObject(Class_Array);
+    realm.Array_prototype = createRealmObject(realmC.Array_prototype);
     realm.Array_prototype.Prototype = realm.Object_prototype;
-    realm.Array_prototype.Extensible = true;
 
-    realm.String_prototype = VMObject(Class_String);
+    realm.String_prototype = createRealmObject(realmC.String_prototype);
     realm.String_prototype.Prototype = realm.Object_prototype;
-    realm.String_prototype.Extensible = true;
     realm.String_prototype.PrimitiveValue = "";
 
-    realm.Boolean_prototype = VMObject(Class_Boolean);
+    realm.Boolean_prototype = createRealmObject(realmC.Boolean_prototype);
     realm.Boolean_prototype.Prototype = realm.Object_prototype;
-    realm.Boolean_prototype.Extensible = true;
     realm.Boolean_prototype.PrimitiveValue = false;
 
-    realm.Number_prototype = VMObject(Class_Number);
+    realm.Number_prototype = createRealmObject(realmC.Number_prototype);
     realm.Number_prototype.Prototype = realm.Object_prototype;
-    realm.Number_prototype.Extensible = true;
     realm.Number_prototype.PrimitiveValue = 0;
 
-    realm.Date_prototype = VMObject(Class_Date);
+    realm.Date_prototype = createRealmObject(realmC.Date_prototype);
     realm.Date_prototype.Prototype = realm.Object_prototype;
-    realm.Date_prototype.Extensible = true;
     realm.Date_prototype.PrimitiveValue = NaN;
 
-    realm.RegExp_prototype = VMObject(Class_RegExp);
+    realm.RegExp_prototype = createRealmObject(realmC.RegExp_prototype);
     realm.RegExp_prototype.Prototype = realm.Object_prototype;
-    realm.RegExp_prototype.Extensible = true;
 
-    realm.Error_prototype = VMObject(Class_Error);
+    realm.Error_prototype = createRealmObject(realmC.Error_prototype);
     realm.Error_prototype.Prototype = realm.Object_prototype;
-    realm.Error_prototype.Extensible = true;
 
-    realm.EvalError_prototype = VMObject(Class_Error);
+    realm.EvalError_prototype = createRealmObject(realmC.EvalError_prototype);
     realm.EvalError_prototype.Prototype = realm.Error_prototype;
-    realm.EvalError_prototype.Extensible = true;
 
-    realm.RangeError_prototype = VMObject(Class_Error);
+    realm.RangeError_prototype = createRealmObject(realmC.RangeError_prototype);
     realm.RangeError_prototype.Prototype = realm.Error_prototype;
-    realm.RangeError_prototype.Extensible = true;
 
-    realm.ReferenceError_prototype = VMObject(Class_Error);
+    realm.ReferenceError_prototype = createRealmObject(realmC.ReferenceError_prototype);
     realm.ReferenceError_prototype.Prototype = realm.Error_prototype;
-    realm.ReferenceError_prototype.Extensible = true;
 
-    realm.SyntaxError_prototype = VMObject(Class_Error);
+    realm.SyntaxError_prototype = createRealmObject(realmC.SyntaxError_prototype);
     realm.SyntaxError_prototype.Prototype = realm.Error_prototype;
-    realm.SyntaxError_prototype.Extensible = true;
 
-    realm.TypeError_prototype = VMObject(Class_Error);
+    realm.TypeError_prototype = createRealmObject(realmC.TypeError_prototype);
     realm.TypeError_prototype.Prototype = realm.Error_prototype;
-    realm.TypeError_prototype.Extensible = true;
 
-    realm.URIError_prototype = VMObject(Class_Error);
+    realm.URIError_prototype = createRealmObject(realmC.URIError_prototype);
     realm.URIError_prototype.Prototype = realm.Error_prototype;
-    realm.URIError_prototype.Extensible = true;
 
-    realm.Object = VMObject(Class_BuiltinFunction);
+    realm.Object = createRealmObject(realmC.Object);
     defineCall(realm.Object, Object_Call);
     defineConstruct(realm.Object, Object_Construct);
     realm.Object.Prototype = realm.Function_prototype;
-    realm.Object.Extensible = true;
 
-    realm.Function = VMObject(Class_BuiltinFunction);
+    realm.Function = createRealmObject(realmC.Function);
     defineCall(realm.Function, Function_Call);
     defineConstruct(realm.Function, Function_Construct);
     realm.Function.Prototype = realm.Function_prototype;
-    realm.Function.Extensible = true;
 
-    realm.Array = VMObject(Class_BuiltinFunction);
+    realm.Array = createRealmObject(realmC.Array);
     defineCall(realm.Array, Array_Call);
     defineConstruct(realm.Array, Array_Construct);
     realm.Array.Prototype = realm.Function_prototype;
-    realm.Array.Extensible = true;
 
-    realm.String = VMObject(Class_BuiltinFunction);
+    realm.String = createRealmObject(realmC.String);
     defineCall(realm.String, String_Call);
     defineConstruct(realm.String, String_Construct);
     realm.String.Prototype = realm.Function_prototype;
-    realm.String.Extensible = true;
 
-    realm.Boolean = VMObject(Class_BuiltinFunction);
+    realm.Boolean = createRealmObject(realmC.Boolean);
     defineCall(realm.Boolean, Boolean_Call);
     defineConstruct(realm.Boolean, Boolean_Construct);
     realm.Boolean.Prototype = realm.Function_prototype;
-    realm.Boolean.Extensible = true;
 
-    realm.Number = VMObject(Class_BuiltinFunction);
+    realm.Number = createRealmObject(realmC.Number);
     defineCall(realm.Number, Number_Call);
     defineConstruct(realm.Number, Number_Construct);
     realm.Number.Prototype = realm.Function_prototype;
-    realm.Number.Extensible = true;
 
-    realm.Math = VMObject(Class_Math);
+    realm.Math = createRealmObject(realmC.Math);
     realm.Math.Prototype = realm.Object_prototype;
-    realm.Math.Extensible = true;
 
-    realm.Date = VMObject(Class_BuiltinFunction);
+    realm.Date = createRealmObject(realmC.Date);
     defineCall(realm.Date, Date_Call);
     defineConstruct(realm.Date, Date_Construct);
     realm.Date.Prototype = realm.Function_prototype;
-    realm.Date.Extensible = true;
 
-    realm.RegExp = VMObject(Class_BuiltinFunction);
+    realm.RegExp = createRealmObject(realmC.RegExp);
     defineCall(realm.RegExp, RegExp_Call);
     defineConstruct(realm.RegExp, RegExp_Construct);
     realm.RegExp.Prototype = realm.Function_prototype;
-    realm.RegExp.Extensible = true;
 
-    realm.Error = VMObject(Class_BuiltinFunction);
+    realm.Error = createRealmObject(realmC.Error);
     defineCall(realm.Error, Error_Call);
     defineConstruct(realm.Error, Error_Construct);
     realm.Error.Prototype = realm.Function_prototype;
-    realm.Error.Extensible = true;
 
-    realm.EvalError = VMObject(Class_BuiltinFunction);
+    realm.EvalError = createRealmObject(realmC.EvalError);
     defineCall(realm.EvalError, EvalError_Call);
     defineConstruct(realm.EvalError, EvalError_Construct);
     realm.EvalError.Prototype = realm.Function_prototype;
-    realm.EvalError.Extensible = true;
 
-    realm.RangeError = VMObject(Class_BuiltinFunction);
+    realm.RangeError = createRealmObject(realmC.RangeError);
     defineCall(realm.RangeError, RangeError_Call);
     defineConstruct(realm.RangeError, RangeError_Construct);
     realm.RangeError.Prototype = realm.Function_prototype;
-    realm.RangeError.Extensible = true;
 
-    realm.ReferenceError = VMObject(Class_BuiltinFunction);
+    realm.ReferenceError = createRealmObject(realmC.ReferenceError);
     defineCall(realm.ReferenceError, ReferenceError_Call);
     defineConstruct(realm.ReferenceError, ReferenceError_Construct);
     realm.ReferenceError.Prototype = realm.Function_prototype;
-    realm.ReferenceError.Extensible = true;
 
-    realm.SyntaxError = VMObject(Class_BuiltinFunction);
+    realm.SyntaxError = createRealmObject(realmC.SyntaxError);
     defineCall(realm.SyntaxError, SyntaxError_Call);
     defineConstruct(realm.SyntaxError, SyntaxError_Construct);
     realm.SyntaxError.Prototype = realm.Function_prototype;
-    realm.SyntaxError.Extensible = true;
 
-    realm.TypeError = VMObject(Class_BuiltinFunction);
+    realm.TypeError = createRealmObject(realmC.TypeError);
     defineCall(realm.TypeError, TypeError_Call);
     defineConstruct(realm.TypeError, TypeError_Construct);
     realm.TypeError.Prototype = realm.Function_prototype;
-    realm.TypeError.Extensible = true;
 
-    realm.URIError = VMObject(Class_BuiltinFunction);
+    realm.URIError = createRealmObject(realmC.URIError);
     defineCall(realm.URIError, URIError_Call);
     defineConstruct(realm.URIError, URIError_Construct);
     realm.URIError.Prototype = realm.Function_prototype;
-    realm.URIError.Extensible = true;
 
-    realm.JSON = VMObject(Class_JSON);
+    realm.JSON = createRealmObject(realmC.JSON);
     realm.JSON.Prototype = realm.Object_prototype;
-    realm.JSON.Extensible = true;
 
-    realm.theGlobalObject = VMObject(Class_Global);
+    realm.theGlobalObject = createRealmObject(realmC.theGlobalObject);
     realm.theGlobalObject.Prototype = realm.Object_prototype;
-    realm.theGlobalObject.Extensible = true;
 
     realm.theGlobalEnvironment = NewObjectEnvironment(realm.theGlobalObject, null);
     realm.theThrowTypeError = createThrowTypeErrorObject();
-
-    defineFinal(realm.theGlobalObject, "NaN", NaN);
-    defineFinal(realm.theGlobalObject, "Infinity", Infinity);
-    defineFinal(realm.theGlobalObject, "undefined", undefined);
-    realm.theEvalFunction = defineFunction(realm.theGlobalObject, "eval", 1, Global_eval);
-    defineFunction(realm.theGlobalObject, "parseInt", 2, Global_parseInt);
-    defineFunction(realm.theGlobalObject, "parseFloat", 1, Global_parseFloat);
-    defineFunction(realm.theGlobalObject, "isNaN", 1, Global_isNaN);
-    defineFunction(realm.theGlobalObject, "isFinite", 1, Global_isFinite);
-    defineFunction(realm.theGlobalObject, "decodeURI", 1, Global_decodeURI);
-    defineFunction(realm.theGlobalObject, "decodeURIComponent", 1, Global_decodeURIComponent);
-    defineFunction(realm.theGlobalObject, "encodeURI", 1, Global_encodeURI);
-    defineFunction(realm.theGlobalObject, "encodeURIComponent", 1, Global_encodeURIComponent);
-    defineFunction(realm.theGlobalObject, "escape", 1, Global_escape);
-    defineFunction(realm.theGlobalObject, "unescape", 1, Global_unescape);
-    define(realm.theGlobalObject, "Object", realm.Object);
-    define(realm.theGlobalObject, "Function", realm.Function);
-    define(realm.theGlobalObject, "Array", realm.Array);
-    define(realm.theGlobalObject, "String", realm.String);
-    define(realm.theGlobalObject, "Boolean", realm.Boolean);
-    define(realm.theGlobalObject, "Number", realm.Number);
-    define(realm.theGlobalObject, "Math", realm.Math);
-    define(realm.theGlobalObject, "Date", realm.Date);
-    define(realm.theGlobalObject, "RegExp", realm.RegExp);
-    define(realm.theGlobalObject, "Error", realm.Error);
-    define(realm.theGlobalObject, "EvalError", realm.EvalError);
-    define(realm.theGlobalObject, "RangeError", realm.RangeError);
-    define(realm.theGlobalObject, "ReferenceError", realm.ReferenceError);
-    define(realm.theGlobalObject, "SyntaxError", realm.SyntaxError);
-    define(realm.theGlobalObject, "TypeError", realm.TypeError);
-    define(realm.theGlobalObject, "URIError", realm.URIError);
-    define(realm.theGlobalObject, "JSON", realm.JSON);
-
-    defineFinal(realm.Object, "length", 1);
-    defineFinal(realm.Object, "prototype", realm.Object_prototype);
-    defineFunction(realm.Object, "getPrototypeOf", 1, Object_getPrototypeOf);
-    defineFunction(realm.Object, "getOwnPropertyDescriptor", 2, Object_getOwnPropertyDescriptor);
-    defineFunction(realm.Object, "getOwnPropertyNames", 1, Object_getOwnPropertyNames);
-    defineFunction(realm.Object, "create", 2, Object_create);
-    defineFunction(realm.Object, "defineProperty", 3, Object_defineProperty);
-    defineFunction(realm.Object, "defineProperties", 2, Object_defineProperties);
-    defineFunction(realm.Object, "seal", 1, Object_seal);
-    defineFunction(realm.Object, "freeze", 1, Object_freeze);
-    defineFunction(realm.Object, "preventExtensions", 1, Object_preventExtensions);
-    defineFunction(realm.Object, "isSealed", 1, Object_isSealed);
-    defineFunction(realm.Object, "isFrozen", 1, Object_isFrozen);
-    defineFunction(realm.Object, "isExtensible", 1, Object_isExtensible);
-    defineFunction(realm.Object, "keys", 1, Object_keys);
-    define(realm.Object_prototype, "constructor", realm.Object);
-    defineFunction(realm.Object_prototype, "toString", 0, Object_prototype_toString);
-    defineFunction(realm.Object_prototype, "toLocaleString", 0, Object_prototype_toLocaleString);
-    defineFunction(realm.Object_prototype, "valueOf", 0, Object_prototype_valueOf);
-    defineFunction(realm.Object_prototype, "hasOwnProperty", 1, Object_prototype_hasOwnProperty);
-    defineFunction(realm.Object_prototype, "isPrototypeOf", 1, Object_prototype_isPrototypeOf);
-    defineFunction(realm.Object_prototype, "propertyIsEnumerable", 1, Object_prototype_propertyIsEnumerable);
-    defineAccessor(realm.Object_prototype, "__proto__", get_Object_prototype___proto__, set_Object_prototype___proto__);
-
-    defineFinal(realm.Function, "length", 1);
-    defineFinal(realm.Function, "prototype", realm.Function_prototype);
-    defineFinal(realm.Function_prototype, "length", 0);
-    define(realm.Function_prototype, "constructor", realm.Function);
-    defineFunction(realm.Function_prototype, "toString", 0, Function_prototype_toString);
-    defineFunction(realm.Function_prototype, "apply", 2, Function_prototype_apply);
-    defineFunction(realm.Function_prototype, "call", 1, Function_prototype_call);
-    defineFunction(realm.Function_prototype, "bind", 1, Function_prototype_bind);
-    defineAccessor(realm.Function_prototype, "name", get_Function_prototype_name, undefined);
-
-    defineFinal(realm.Array, "length", 1);
-    defineFinal(realm.Array, "prototype", realm.Array_prototype);
-    defineFunction(realm.Array, "isArray", 1, Array_isArray);
-    defineWritable(realm.Array_prototype, "length", 0);
-    define(realm.Array_prototype, "constructor", realm.Array);
-    defineFunction(realm.Array_prototype, "toString", 0, Array_prototype_toString);
-    defineFunction(realm.Array_prototype, "toLocaleString", 0, Array_prototype_toLocaleString);
-    defineFunction(realm.Array_prototype, "concat", 1, Array_prototype_concat);
-    defineFunction(realm.Array_prototype, "join", 1, Array_prototype_join);
-    defineFunction(realm.Array_prototype, "pop", 0, Array_prototype_pop);
-    defineFunction(realm.Array_prototype, "push", 1, Array_prototype_push);
-    defineFunction(realm.Array_prototype, "reverse", 0, Array_prototype_reverse);
-    defineFunction(realm.Array_prototype, "shift", 0, Array_prototype_shift);
-    defineFunction(realm.Array_prototype, "slice", 2, Array_prototype_slice);
-    defineFunction(realm.Array_prototype, "sort", 1, Array_prototype_sort);
-    defineFunction(realm.Array_prototype, "splice", 2, Array_prototype_splice);
-    defineFunction(realm.Array_prototype, "unshift", 1, Array_prototype_unshift);
-    defineFunction(realm.Array_prototype, "indexOf", 1, Array_prototype_indexOf);
-    defineFunction(realm.Array_prototype, "lastIndexOf", 1, Array_prototype_lastIndexOf);
-    defineFunction(realm.Array_prototype, "every", 1, Array_prototype_every);
-    defineFunction(realm.Array_prototype, "some", 1, Array_prototype_some);
-    defineFunction(realm.Array_prototype, "forEach", 1, Array_prototype_forEach);
-    defineFunction(realm.Array_prototype, "map", 1, Array_prototype_map);
-    defineFunction(realm.Array_prototype, "filter", 1, Array_prototype_filter);
-    defineFunction(realm.Array_prototype, "reduce", 1, Array_prototype_reduce);
-    defineFunction(realm.Array_prototype, "reduceRight", 1, Array_prototype_reduceRight);
-
-    defineFinal(realm.String, "length", 1);
-    defineFinal(realm.String, "prototype", realm.String_prototype);
-    defineFunction(realm.String, "fromCharCode", 1, String_fromCharCode);
-    defineFinal(realm.String_prototype, "length", 0);
-    define(realm.String_prototype, "constructor", realm.String);
-    defineFunction(realm.String_prototype, "toString", 0, String_prototype_toString);
-    defineFunction(realm.String_prototype, "valueOf", 0, String_prototype_valueOf);
-    defineFunction(realm.String_prototype, "charAt", 1, String_prototype_charAt);
-    defineFunction(realm.String_prototype, "charCodeAt", 1, String_prototype_charCodeAt);
-    defineFunction(realm.String_prototype, "concat", 1, String_prototype_concat);
-    defineFunction(realm.String_prototype, "indexOf", 1, String_prototype_indexOf);
-    defineFunction(realm.String_prototype, "lastIndexOf", 1, String_prototype_lastIndexOf);
-    defineFunction(realm.String_prototype, "localeCompare", 1, String_prototype_localeCompare);
-    defineFunction(realm.String_prototype, "match", 1, String_prototype_match);
-    defineFunction(realm.String_prototype, "replace", 2, String_prototype_replace);
-    defineFunction(realm.String_prototype, "search", 1, String_prototype_search);
-    defineFunction(realm.String_prototype, "slice", 2, String_prototype_slice);
-    defineFunction(realm.String_prototype, "split", 2, String_prototype_split);
-    defineFunction(realm.String_prototype, "substring", 2, String_prototype_substring);
-    defineFunction(realm.String_prototype, "toLowerCase", 0, String_prototype_toLowerCase);
-    defineFunction(realm.String_prototype, "toLocaleLowerCase", 0, String_prototype_toLocaleLowerCase);
-    defineFunction(realm.String_prototype, "toUpperCase", 0, String_prototype_toUpperCase);
-    defineFunction(realm.String_prototype, "toLocaleUpperCase", 0, String_prototype_toLocaleUpperCase);
-    defineFunction(realm.String_prototype, "trim", 0, String_prototype_trim);
-    defineFunction(realm.String_prototype, "substr", 2, String_prototype_substr);
-
-    defineFinal(realm.Boolean, "length", 1);
-    defineFinal(realm.Boolean, "prototype", realm.Boolean_prototype);
-    define(realm.Boolean_prototype, "constructor", realm.Boolean);
-    defineFunction(realm.Boolean_prototype, "toString", 0, Boolean_prototype_toString);
-    defineFunction(realm.Boolean_prototype, "valueOf", 0, Boolean_prototype_valueOf);
-
-    defineFinal(realm.Number, "length", 1);
-    defineFinal(realm.Number, "prototype", realm.Number_prototype);
-    defineFinal(realm.Number, "MAX_VALUE", Number.MAX_VALUE);
-    defineFinal(realm.Number, "MIN_VALUE", Number.MIN_VALUE);
-    defineFinal(realm.Number, "NaN", NaN);
-    defineFinal(realm.Number, "POSITIVE_INFINITY", Infinity);
-    defineFinal(realm.Number, "NEGATIVE_INFINITY", -Infinity);
-    define(realm.Number_prototype, "constructor", realm.Number);
-    defineFunction(realm.Number_prototype, "toString", 0, Number_prototype_toString);
-    defineFunction(realm.Number_prototype, "toLocaleString", 0, Number_prototype_toLocaleString);
-    defineFunction(realm.Number_prototype, "valueOf", 0, Number_prototype_valueOf);
-    defineFunction(realm.Number_prototype, "toFixed", 1, Number_prototype_toFixed);
-    defineFunction(realm.Number_prototype, "toExponential", 1, Number_prototype_toExponential);
-    defineFunction(realm.Number_prototype, "toPrecision", 1, Number_prototype_toPrecision);
-
-    defineFinal(realm.Math, "E", Math.E);
-    defineFinal(realm.Math, "LN10", Math.LN10);
-    defineFinal(realm.Math, "LN2", Math.LN2);
-    defineFinal(realm.Math, "LOG2E", Math.LOG2E);
-    defineFinal(realm.Math, "LOG10E", Math.LOG10E);
-    defineFinal(realm.Math, "PI", Math.PI);
-    defineFinal(realm.Math, "SQRT1_2", Math.SQRT1_2);
-    defineFinal(realm.Math, "SQRT2", Math.SQRT2);
-    defineFunction(realm.Math, "abs", 1, Math_abs);
-    defineFunction(realm.Math, "acos", 1, Math_acos);
-    defineFunction(realm.Math, "asin", 1, Math_asin);
-    defineFunction(realm.Math, "atan", 1, Math_atan);
-    defineFunction(realm.Math, "atan2", 2, Math_atan2);
-    defineFunction(realm.Math, "ceil", 1, Math_ceil);
-    defineFunction(realm.Math, "cos", 1, Math_cos);
-    defineFunction(realm.Math, "exp", 1, Math_exp);
-    defineFunction(realm.Math, "floor", 1, Math_floor);
-    defineFunction(realm.Math, "log", 1, Math_log);
-    defineFunction(realm.Math, "max", 2, Math_max);
-    defineFunction(realm.Math, "min", 2, Math_min);
-    defineFunction(realm.Math, "pow", 2, Math_pow);
-    defineFunction(realm.Math, "random", 0, Math_random);
-    defineFunction(realm.Math, "round", 1, Math_round);
-    defineFunction(realm.Math, "sin", 1, Math_sin);
-    defineFunction(realm.Math, "sqrt", 1, Math_sqrt);
-    defineFunction(realm.Math, "tan", 1, Math_tan);
-
-    defineFinal(realm.Date, "length", 7);
-    defineFinal(realm.Date, "prototype", realm.Date_prototype);
-    defineFunction(realm.Date, "parse", 1, Date_parse);
-    defineFunction(realm.Date, "UTC", 7, Date_UTC);
-    defineFunction(realm.Date, "now", 0, Date_now);
-    define(realm.Date_prototype, "constructor", realm.Date);
-    defineFunction(realm.Date_prototype, "toString", 0, Date_prototype_toString);
-    defineFunction(realm.Date_prototype, "toDateString", 0, Date_prototype_toDateString);
-    defineFunction(realm.Date_prototype, "toTimeString", 0, Date_prototype_toTimeString);
-    defineFunction(realm.Date_prototype, "toLocaleString", 0, Date_prototype_toLocaleString);
-    defineFunction(realm.Date_prototype, "toLocaleDateString", 0, Date_prototype_toLocaleDateString);
-    defineFunction(realm.Date_prototype, "toLocaleTimeString", 0, Date_prototype_toLocaleTimeString);
-    defineFunction(realm.Date_prototype, "valueOf", 0, Date_prototype_valueOf);
-    defineFunction(realm.Date_prototype, "getTime", 0, Date_prototype_getTime);
-    defineFunction(realm.Date_prototype, "getFullYear", 0, Date_prototype_getFullYear);
-    defineFunction(realm.Date_prototype, "getUTCFullYear", 0, Date_prototype_getUTCFullYear);
-    defineFunction(realm.Date_prototype, "getMonth", 0, Date_prototype_getMonth);
-    defineFunction(realm.Date_prototype, "getUTCMonth", 0, Date_prototype_getUTCMonth);
-    defineFunction(realm.Date_prototype, "getDate", 0, Date_prototype_getDate);
-    defineFunction(realm.Date_prototype, "getUTCDate", 0, Date_prototype_getUTCDate);
-    defineFunction(realm.Date_prototype, "getDay", 0, Date_prototype_getDay);
-    defineFunction(realm.Date_prototype, "getUTCDay", 0, Date_prototype_getUTCDay);
-    defineFunction(realm.Date_prototype, "getHours", 0, Date_prototype_getHours);
-    defineFunction(realm.Date_prototype, "getUTCHours", 0, Date_prototype_getUTCHours);
-    defineFunction(realm.Date_prototype, "getMinutes", 0, Date_prototype_getMinutes);
-    defineFunction(realm.Date_prototype, "getUTCMinutes", 0, Date_prototype_getUTCMinutes);
-    defineFunction(realm.Date_prototype, "getSeconds", 0, Date_prototype_getSeconds);
-    defineFunction(realm.Date_prototype, "getUTCSeconds", 0, Date_prototype_getUTCSeconds);
-    defineFunction(realm.Date_prototype, "getMilliseconds", 0, Date_prototype_getMilliseconds);
-    defineFunction(realm.Date_prototype, "getUTCMilliseconds", 0, Date_prototype_getUTCMilliseconds);
-    defineFunction(realm.Date_prototype, "getTimezoneOffset", 0, Date_prototype_getTimezoneOffset);
-    defineFunction(realm.Date_prototype, "setTime", 1, Date_prototype_setTime);
-    defineFunction(realm.Date_prototype, "setMilliseconds", 1, Date_prototype_setMilliseconds);
-    defineFunction(realm.Date_prototype, "setUTCMilliseconds", 1, Date_prototype_setUTCMilliseconds);
-    defineFunction(realm.Date_prototype, "setSeconds", 2, Date_prototype_setSeconds);
-    defineFunction(realm.Date_prototype, "setUTCSeconds", 2, Date_prototype_setUTCSeconds);
-    defineFunction(realm.Date_prototype, "setMinutes", 3, Date_prototype_setMinutes);
-    defineFunction(realm.Date_prototype, "setUTCMinutes", 3, Date_prototype_setUTCMinutes);
-    defineFunction(realm.Date_prototype, "setHours", 4, Date_prototype_setHours);
-    defineFunction(realm.Date_prototype, "setUTCHours", 4, Date_prototype_setUTCHours);
-    defineFunction(realm.Date_prototype, "setDate", 1, Date_prototype_setDate);
-    defineFunction(realm.Date_prototype, "setUTCDate", 1, Date_prototype_setUTCDate);
-    defineFunction(realm.Date_prototype, "setMonth", 2, Date_prototype_setMonth);
-    defineFunction(realm.Date_prototype, "setUTCMonth", 2, Date_prototype_setUTCMonth);
-    defineFunction(realm.Date_prototype, "setFullYear", 3, Date_prototype_setFullYear);
-    defineFunction(realm.Date_prototype, "setUTCFullYear", 3, Date_prototype_setUTCFullYear);
-    defineFunction(realm.Date_prototype, "toUTCString", 0, Date_prototype_toUTCString);
-    defineFunction(realm.Date_prototype, "toISOString", 0, Date_prototype_toISOString);
-    defineFunction(realm.Date_prototype, "toJSON", 1, Date_prototype_toJSON);
-    defineFunction(realm.Date_prototype, "getYear", 0, Date_prototype_getYear);
-    defineFunction(realm.Date_prototype, "setYear", 1, Date_prototype_setYear);
-    defineFunction(realm.Date_prototype, "toGMTString", 0, Date_prototype_toUTCString);
-
-    defineFinal(realm.RegExp, "length", 2);
-    defineFinal(realm.RegExp, "prototype", realm.RegExp_prototype);
-    defineFinal(realm.RegExp_prototype, "source", "(?:)");
-    defineFinal(realm.RegExp_prototype, "global", false);
-    defineFinal(realm.RegExp_prototype, "ignoreCase", false);
-    defineFinal(realm.RegExp_prototype, "multiline", false);
-    defineWritable(realm.RegExp_prototype, "lastIndex", 0);
+    realm.theEvalFunction = intrinsic_get(realm.theGlobalObject, "eval");
     RegExpFactory.recompile(realm.RegExp_prototype);
-    define(realm.RegExp_prototype, "constructor", realm.RegExp);
-    defineFunction(realm.RegExp_prototype, "exec", 1, RegExp_prototype_exec);
-    defineFunction(realm.RegExp_prototype, "test", 1, RegExp_prototype_test);
-    defineFunction(realm.RegExp_prototype, "toString", 0, RegExp_prototype_toString);
-
-    defineFinal(realm.Error, "length", 1);
-    defineFinal(realm.Error, "prototype", realm.Error_prototype);
-    define(realm.Error_prototype, "constructor", realm.Error);
-    define(realm.Error_prototype, "name", "Error");
-    define(realm.Error_prototype, "message", "");
-    defineFunction(realm.Error_prototype, "toString", 0, Error_prototype_toString);
-    defineWritable(realm.Error, "stackTraceLimit", 10);
-    defineAccessor(realm.Error_prototype, "stack", get_Error_prototype_stack, undefined);
-    defineFunction(realm.Error_prototype, "getStackTraceEntry", 1, Error_prototype_getStackTraceEntry);
-
-    defineFinal(realm.EvalError, "length", 1);
-    defineFinal(realm.EvalError, "prototype", realm.EvalError_prototype);
-    define(realm.EvalError_prototype, "constructor", realm.EvalError);
-    define(realm.EvalError_prototype, "name", "EvalError");
-    define(realm.EvalError_prototype, "message", "");
-
-    defineFinal(realm.RangeError, "length", 1);
-    defineFinal(realm.RangeError, "prototype", realm.RangeError_prototype);
-    define(realm.RangeError_prototype, "constructor", realm.RangeError);
-    define(realm.RangeError_prototype, "name", "RangeError");
-    define(realm.RangeError_prototype, "message", "");
-
-    defineFinal(realm.ReferenceError, "length", 1);
-    defineFinal(realm.ReferenceError, "prototype", realm.ReferenceError_prototype);
-    define(realm.ReferenceError_prototype, "constructor", realm.ReferenceError);
-    define(realm.ReferenceError_prototype, "name", "ReferenceError");
-    define(realm.ReferenceError_prototype, "message", "");
-
-    defineFinal(realm.SyntaxError, "length", 1);
-    defineFinal(realm.SyntaxError, "prototype", realm.SyntaxError_prototype);
-    define(realm.SyntaxError_prototype, "constructor", realm.SyntaxError);
-    define(realm.SyntaxError_prototype, "name", "SyntaxError");
-    define(realm.SyntaxError_prototype, "message", "");
-
-    defineFinal(realm.TypeError, "length", 1);
-    defineFinal(realm.TypeError, "prototype", realm.TypeError_prototype);
-    define(realm.TypeError_prototype, "constructor", realm.TypeError);
-    define(realm.TypeError_prototype, "name", "TypeError");
-    define(realm.TypeError_prototype, "message", "");
-
-    defineFinal(realm.URIError, "length", 1);
-    defineFinal(realm.URIError, "prototype", realm.URIError_prototype);
-    define(realm.URIError_prototype, "constructor", realm.URIError);
-    define(realm.URIError_prototype, "name", "URIError");
-    define(realm.URIError_prototype, "message", "");
-
-    defineFunction(realm.JSON, "parse", 2, JSON_parse);
-    defineFunction(realm.JSON, "stringify", 3, JSON_stringify);
-
-    defineFinal(realm.Object, "name", "Object");
-    defineFinal(realm.Function, "name", "Function");
-    defineFinal(realm.Array, "name", "Array");
-    defineFinal(realm.String, "name", "String");
-    defineFinal(realm.Boolean, "name", "Boolean");
-    defineFinal(realm.Number, "name", "Number");
-    defineFinal(realm.Date, "name", "Date");
-    defineFinal(realm.RegExp, "name", "RegExp");
-    defineFinal(realm.Error, "name", "Error");
-    defineFinal(realm.EvalError, "name", "EvalError");
-    defineFinal(realm.RangeError, "name", "RangeError");
-    defineFinal(realm.ReferenceError, "name", "ReferenceError");
-    defineFinal(realm.SyntaxError, "name", "SyntaxError");
-    defineFinal(realm.TypeError, "name", "TypeError");
-    defineFinal(realm.URIError, "name", "URIError");
 }

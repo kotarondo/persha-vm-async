@@ -108,13 +108,15 @@ class VM {
             });
         }
         this.context = context;
+        this.realmClass = context.initializeRealmClass();
     }
 
     createRealm() {
         var context = this.context;
+        var realmClass = this.realmClass;
         var saved = context.realm;
         context.realm = null;
-        context.initializeRealm();
+        context.initializeRealm(realmClass);
         var realm = context.realm;
         context.realm = saved;
         return realm;
