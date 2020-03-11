@@ -172,7 +172,7 @@ function realmClassDefine(realmClass, name, creator) {
     }
 }
 
-function initializeRealmClass() {
+function initializeRealmClass(realmObjectClasses = {}) {
     var realmC_Object_prototype = RealmObjectClass(Class_Object);
     var realmC_Function_prototype = RealmObjectClass(Class_BuiltinFunction);
     var realmC_Array_prototype = RealmObjectClass(Class_Array);
@@ -206,6 +206,8 @@ function initializeRealmClass() {
     var realmC_URIError = RealmObjectClass(Class_BuiltinFunction);
     var realmC_JSON = RealmObjectClass(Class_JSON);
     var realmC_theGlobalObject = RealmObjectClass(Class_Global);
+
+    Object.assign(realmObjectClasses, { realmC_Object_prototype, realmC_Function_prototype, realmC_Array_prototype, realmC_String_prototype, realmC_Boolean_prototype, realmC_Number_prototype, realmC_Date_prototype, realmC_RegExp_prototype, realmC_Error_prototype, realmC_EvalError_prototype, realmC_RangeError_prototype, realmC_ReferenceError_prototype, realmC_SyntaxError_prototype, realmC_TypeError_prototype, realmC_URIError_prototype, realmC_Object, realmC_Function, realmC_Array, realmC_String, realmC_Boolean, realmC_Number, realmC_Math, realmC_Date, realmC_RegExp, realmC_Error, realmC_EvalError, realmC_RangeError, realmC_ReferenceError, realmC_SyntaxError, realmC_TypeError, realmC_URIError, realmC_JSON, realmC_theGlobalObject });
 
     realmDefineFinal(realmC_theGlobalObject, "NaN", NaN);
     realmDefineFinal(realmC_theGlobalObject, "Infinity", Infinity);

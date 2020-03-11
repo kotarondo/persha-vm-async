@@ -1,6 +1,6 @@
 {
     "name": "persha-vm-async",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Deterministic JavaScript Virtual Machine (asynchronous version)",
     "author": "Kotaro Endo <kotarondo@gmail.com>",
     "license": "BSD-3-Clause",
@@ -17,7 +17,7 @@
         "url": "https://github.com/kotarondo/persha-vm-async/issues"
     },
     "engines": {
-        "node": ">=8"
+        "node": ">=10"
     },
     "dependencies": {},
     "devDependencies": {},
