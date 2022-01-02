@@ -139,7 +139,7 @@ async function test() {
             }
         }
     }
-    if(fails) console.log(fails)
+    if (fails) console.log(fails)
     console.log('pass: ' + passCount)
     console.log('fail: ' + failCount)
     console.log('skip: ' + skipCount)

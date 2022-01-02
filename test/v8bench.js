@@ -7,12 +7,15 @@ process.chdir("v8bench")
 
 var plugin = `
 
-var old_initializeRealm = initializeRealm;
-initializeRealm = new_initializeRealm;
+var old_initializeRealmClass = initializeRealmClass;
+initializeRealmClass = new_initializeRealmClass;
 
-function new_initializeRealm() {
-    old_initializeRealm();
-    defineFunction(realm.theGlobalObject, "print", 1, Global_print);
+function new_initializeRealmClass() {
+    var realmObjectClasses = {}
+    var realmClass = old_initializeRealmClass(realmObjectClasses);
+    var { realmC_theGlobalObject } = realmObjectClasses;
+    realmDefineFunction(realmC_theGlobalObject, "print", 1, Global_print);
+    return realmClass;
 }
 
 async function Global_print(thisValue, argumentsList) {
