@@ -33,7 +33,7 @@ async function load(f) {
 }
 
 async function run() {
-    vm = new VM([{text: plugin}])
+    vm = new VM([{ text: plugin }])
     realm = await vm.createRealm()
     await load('base.js')
     await load('richards.js')

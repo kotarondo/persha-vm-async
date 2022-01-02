@@ -6,11 +6,6 @@ const fs = require('fs')
 const assert = require('assert')
 const path = require('path')
 const VM = require('../index.js')
-const vm = new VM();
-
-// for Tests S15.9.3.1_A5_T*.js
-vm.context.LocalTZA = -8 * 3600000;
-vm.context.LocalTZAString = "PDT";
 
 process.chdir(path.join(__dirname, 'test262'))
 
@@ -75,10 +70,14 @@ var fails = ''
 
 var sta_source = fs.readFileSync('sta.js', 'utf8')
 var sta_patch_source = fs.readFileSync('sta_patch.js', 'utf8')
+var vm = new VM();
+// for Tests S15.9.3.1_A5_T*.js
+vm.context.LocalTZA = -8 * 3600000;
+vm.context.LocalTZAString = "PDT";
 
 async function doTest(test) {
     console.log(test.path)
-    var source = new Buffer(test.code, 'base64').toString('binary')
+    var source = Buffer.from(test.code, 'base64').toString('binary')
     source = decodeURIComponent(escape(source)) // UTF-8 decoding trick
     var realm = await vm.createRealm()
     await vm.evaluateProgram(realm, sta_source, 'sta.js')
@@ -140,7 +139,7 @@ async function test() {
             }
         }
     }
-    console.log(fails)
+    if(fails) console.log(fails)
     console.log('pass: ' + passCount)
     console.log('fail: ' + failCount)
     console.log('skip: ' + skipCount)

@@ -8,15 +8,7 @@ cd "$(dirname "$0")"
 FAILED=0
 SUCCESS=0
 
-NAMEBASES=$*
-
-if [ -z "$NAMEBASES" ]; then
-	NAMEBASES="test- test262"
-fi
-
-for dir in $NAMEBASES
-do
-for file in ${dir}*.js
+for file in test-*.js
 do
 echo testing $file
 node $file
@@ -26,6 +18,17 @@ else
 	let "SUCCESS += 1"
 fi
 done
+
+export SKIP_HEAVY_TESTS=true
+for ts in ch0[67] ch08 ch09 ch10 ch11 ch12 ch13 ch14 ch15/15.1 ch15/15.2 ch15/15.3 ch15/15.4 ch15/15.5 ch15/15.[6789]
+do
+echo testing test262 $ts
+node test262 $ts
+if [ $? -ne 0 ]; then
+	let "FAILED += 1"
+else
+	let "SUCCESS += 1"
+fi
 done
 
 echo
