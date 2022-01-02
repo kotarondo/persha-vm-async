@@ -278,6 +278,73 @@ function importValue(A, map) {
     if (map.has(A)) {
         return map.get(A);
     }
+    switch (Object.prototype.toString.call(A)) {
+        case '[object Number]':
+            var value = Number(A.valueOf());
+            var obj = VMObject(Class_Number);
+            obj.Prototype = realm.Number_prototype;
+            obj.Extensible = true;
+            obj.PrimitiveValue = value;
+            return obj;
+        case '[object String]':
+            var value = String(A.valueOf());
+            var obj = VMObject(Class_String);
+            obj.Prototype = realm.String_prototype;
+            obj.Extensible = true;
+            obj.PrimitiveValue = value;
+            defineFinal(obj, "length", value.length);
+            return obj;
+        case '[object Boolean]':
+            var value = Boolean(A.valueOf());
+            var obj = VMObject(Class_Boolean);
+            obj.Prototype = realm.Boolean_prototype;
+            obj.Extensible = true;
+            obj.PrimitiveValue = value;
+            return obj;
+        case '[object Date]':
+            var value = Number(A.getTime());
+            var obj = VMObject(Class_Date);
+            obj.Prototype = realm.Date_prototype;
+            obj.Extensible = true;
+            obj.PrimitiveValue = value;
+            return obj;
+        case '[object RegExp]':
+            var P = String(A.source);
+            var F = (A.global ? "g" : "") + (A.ignoreCase ? "i" : "") + (A.multiline ? "m" : "");
+            var regexp = RegExpFactory.compile(P, F, true);
+            return RegExpFactory.createRegExpObject(regexp);
+        case '[object Error]':
+            var name = String(A.name);
+            var message = String(A.message);
+            var stack = String(A.stack);
+            switch (name) {
+                case 'TypeError':
+                    var obj = VMTypeError(message);
+                    break;
+                case 'ReferenceError':
+                    var obj = VMReferenceError(message);
+                    break;
+                case 'RangeError':
+                    var obj = VMRangeError(message);
+                    break;
+                case 'SyntaxError':
+                    var obj = VMSyntaxError(message);
+                    break;
+                case 'URIError':
+                    var obj = VMURIError(message);
+                    break;
+                case 'EvalError':
+                    var obj = VMEvalError(message);
+                    break;
+                default:
+                    var obj = VMError(message);
+                    break;
+            }
+            define(obj, "stack", stack);
+            return obj;
+        case '[object Function]':
+            return null;
+    }
     if (Array.isArray(A)) {
         var obj = intrinsic_Array();
         map.set(A, obj);
