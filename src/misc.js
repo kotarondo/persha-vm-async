@@ -186,7 +186,8 @@ function exportRegExp(A) {
 function exportError(A) {
     var name = safe_get_primitive_value(A, 'name');
     var msg = safe_get_primitive_value(A, 'message');
-    var stackTrace = A.stackTrace;
+    var stack = safe_get_primitive_value(A, 'stack');
+    var stackTrace = A.stackTrace || [];
     switch (name) {
         case 'TypeError':
             var err = new TypeError(msg);
@@ -219,22 +220,26 @@ function exportError(A) {
             });
             break;
     }
-    var arr = [];
-    if (name === '') arr[0] = msg;
-    else if (msg === '') arr[0] = name;
-    else arr[0] = name + ': ' + msg;
-    for (var i = 0; i < stackTrace.length; i++) {
-        var code = stackTrace[i].code;
-        var pos = stackTrace[i].pos;
-        var info = {};
-        Parser.locateDebugInfo(code, pos, info);
-        var finfo = info.filename + ':' + info.lineNumber + ':' + info.columnNumber;
-        arr[i + 1] = finfo;
-        if (info.functionName) {
-            arr[i + 1] = info.functionName + ' (' + finfo + ')';
+    if (typeof stack === 'string') {
+        err.stack = stack;
+    } else {
+        var arr = [];
+        if (name === '') arr[0] = msg;
+        else if (msg === '') arr[0] = name;
+        else arr[0] = name + ': ' + msg;
+        for (var i = 0; i < stackTrace.length; i++) {
+            var code = stackTrace[i].code;
+            var pos = stackTrace[i].pos;
+            var info = {};
+            Parser.locateDebugInfo(code, pos, info);
+            var finfo = info.filename + ':' + info.lineNumber + ':' + info.columnNumber;
+            arr[i + 1] = finfo;
+            if (info.functionName) {
+                arr[i + 1] = info.functionName + ' (' + finfo + ')';
+            }
         }
+        err.stack = arr.join('\n    at ');
     }
-    err.stack = arr.join('\n    at ');
     return err;
 }
 

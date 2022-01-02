@@ -251,7 +251,7 @@ async function URIError_Construct(argumentsList) {
 
 async function get_Error_prototype_stack(thisValue, argumentsList) {
     if (Type(thisValue) !== TYPE_Object || thisValue.Class !== "Error") throw VMTypeError();
-    var stackTrace = thisValue.stackTrace;
+    var stackTrace = thisValue.stackTrace || [];
     var A = [];
     A[0] = await Error_prototype_toString(thisValue, []);
     for (var i = 0; i < stackTrace.length; i++) {
@@ -270,7 +270,7 @@ async function get_Error_prototype_stack(thisValue, argumentsList) {
 
 async function Error_prototype_getStackTraceEntry(thisValue, argumentsList) {
     var index = await ToUint32(argumentsList[0]);
-    var stackTrace = thisValue.stackTrace;
+    var stackTrace = thisValue.stackTrace || [];
     if (stackTrace[index] === undefined) {
         return undefined;
     }
