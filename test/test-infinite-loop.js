@@ -19,7 +19,6 @@ async function test() {
     await test1(realm, '', 'with({})for(;;);', [])
     await test1(realm, '', 'eval("with({})for(;;);")', [])
     await test1(realm, '', 'try{for(;;);}finally{x=1;throw 1}', [])
-    console.log('success')
 }
 
 async function test1(realm, para, text, args) {

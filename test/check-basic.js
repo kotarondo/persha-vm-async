@@ -37,7 +37,6 @@ async function test() {
         }
         throw value;
     }
-    console.log('success')
 }
 
 test().then(test_success).catch(test_failed);

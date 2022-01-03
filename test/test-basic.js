@@ -32,7 +32,6 @@ async function test() {
             process.exit(1);
         }
     }
-    console.log('success')
 }
 
 test().then(test_success).catch(test_failed);

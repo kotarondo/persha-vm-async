@@ -18,7 +18,6 @@ async function test() {
     assert(type === 'normal' && value === 4);
     var { type, value } = await vm.evaluateFunction(realm, 'a123', 'throw a123', 'test.js', [{ a: 123, b: [1, 2, 3] }])
     assert(type === 'throw' && JSON.stringify(value) === '{"a":123,"b":[1,2,3]}');
-    console.log('success')
 }
 
 test().then(test_success).catch(test_failed);

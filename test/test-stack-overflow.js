@@ -9,7 +9,6 @@ var vm = new VM()
 async function test() {
     var realm = await vm.createRealm()
     await test1(realm, '', 'function f(){return f()}; f();', [])
-    console.log('success')
 }
 
 async function test1(realm, para, text, args) {
