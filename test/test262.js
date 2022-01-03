@@ -142,7 +142,7 @@ async function test() {
                 if (stopIfFailed) break main;
             }
             await sleep(1);
-            console.log(process.memoryUsage());
+            // console.log(process.memoryUsage());
         }
     }
     if (fails) console.log(fails)
