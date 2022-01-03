@@ -17,10 +17,11 @@
         "url": "https://github.com/kotarondo/persha-vm-async/issues"
     },
     "engines": {
-        "node": ">=14"
+        "node": ">=16"
     },
-    "dependencies": {},
-    "devDependencies": {},
+    "devDependencies": {
+        "express": "^4.17.2"
+    },
     "files": [
         "src",
         "index.js"
