@@ -26,6 +26,7 @@
         "index.js"
     ],
     "scripts": {
-        "test": "./test/run-tests.sh"
+        "test": "./test/run-tests.sh",
+        "nyc-test": "nyc --hook-run-in-this-context ./test/run-tests.sh"
     }
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2017, Kotaro Endo.
+# Copyright (c) 2017-2022, Kotaro Endo.
 # All rights reserved.
 # License: "BSD-3-Clause"
 
