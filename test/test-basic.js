@@ -2,13 +2,10 @@
 // All rights reserved.
 // License: "BSD-3-Clause"
 
-const fs = require('fs')
-const path = require('path')
-const assert = require('assert')
-const VM = require('../index.js')
-var vm = new VM()
+require('./harness')
+process.chdir('basic')
 
-process.chdir(path.join(__dirname, 'basic'))
+var vm = new VM()
 
 if (process.argv.length <= 2) {
     var filenames = fs.readdirSync(".")
@@ -38,7 +35,4 @@ async function test() {
     console.log('success')
 }
 
-test().catch(err => {
-    console.log(err)
-    process.exit(1);
-})
+test().then(test_success).catch(test_failed);

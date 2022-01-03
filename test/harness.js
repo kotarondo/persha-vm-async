@@ -7,6 +7,7 @@
 process.chdir(__dirname)
 
 global.fs = require('fs')
+global.assert = require('assert')
 global.VM = require('../index.js')
 
 var exit_code = 1
@@ -23,14 +24,11 @@ global.test_success = function() {
     console.log("OK")
 }
 
-global.assert = function(expr, msg) {
-    if (!expr) {
-        var err = new Error("NG: assert failed:" + msg)
-        debugger
-        throw err
-    }
+global.test_failed = function() {
+    console.log("FAILED")
+    process.exit(99)
 }
 
-global.assert_equals = function(act, exp) {
-    assert(act === exp, "actual: " + act + " expected: " + exp)
+global.sleep = function(msec) {
+    return new Promise(resolve => setTimeout(resolve, msec));
 }

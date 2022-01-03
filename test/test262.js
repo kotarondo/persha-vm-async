@@ -2,12 +2,8 @@
 // All rights reserved.
 // License: 'BSD-3-Clause'
 
-const fs = require('fs')
-const assert = require('assert')
-const path = require('path')
-const VM = require('../index.js')
-
-process.chdir(path.join(__dirname, 'test262'))
+require('./harness')
+process.chdir('test262')
 
 const stopIfFailed = process.env.STOP_IF_FAILED
 const skipHeavyTests = process.env.SKIP_HEAVY_TESTS
@@ -114,10 +110,6 @@ async function doTest(test) {
     return false
 }
 
-function sleep(msec) {
-    return new Promise(resolve => setTimeout(resolve, msec));
-}
-
 async function test() {
     main: for (var filename of testSuites) {
         var tests = JSON.parse(fs.readFileSync(filename, 'utf8')).testsCollection.tests
@@ -152,7 +144,4 @@ async function test() {
     if (failCount > 0) process.exit(1);
 }
 
-test().catch(err => {
-    console.log(err)
-    process.exit(1);
-})
+test().then(test_success).catch(test_failed);

@@ -3,7 +3,7 @@
 // License: "BSD-3-Clause"
 
 require('./harness')
-process.chdir("v8bench")
+process.chdir('v8bench')
 
 var plugin = `
 
@@ -24,7 +24,8 @@ async function Global_print(thisValue, argumentsList) {
     for (var i = 0; i < argumentsList.length; i++) {
         a[i] = exportValue(argumentsList[i], map);
     }
-    console.log(a);
+    console.log.apply(null, a);
+    await sleep(1000);
 }
 
 `;
@@ -48,7 +49,6 @@ async function run() {
     // await load('splay.js')
     await load('navier-stokes.js')
     await load("run.js")
-    test_success()
 }
 
-run();
+run().then(test_success).catch(test_failed);

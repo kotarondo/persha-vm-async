@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 FAILED=0
 SUCCESS=0
 
-for file in test-*.js
+for file in test-*.js v8bench.js
 do
 echo testing $file
 node $file

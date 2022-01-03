@@ -2,10 +2,8 @@
 // All rights reserved.
 // License: "BSD-3-Clause"
 
-const fs = require('fs')
-const path = require('path')
-const assert = require('assert')
-const VM = require('../index.js')
+require('./harness')
+
 var vm = new VM()
 
 async function test() {
@@ -22,7 +20,4 @@ async function test1(realm, para, text, args) {
     console.log('elapsed:' + elapsed, text);
 }
 
-test().catch(err => {
-    console.log(err)
-    process.exit(1);
-})
+test().then(test_success).catch(test_failed);
