@@ -1,4 +1,4 @@
 *.swp
 *.log
-OLD
 node_modules
+.nyc_output
