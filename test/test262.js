@@ -114,6 +114,10 @@ async function doTest(test) {
     return false
 }
 
+function sleep(msec) {
+    return new Promise(resolve => setTimeout(resolve, msec));
+}
+
 async function test() {
     main: for (var filename of testSuites) {
         var tests = JSON.parse(fs.readFileSync(filename, 'utf8')).testsCollection.tests
@@ -137,6 +141,8 @@ async function test() {
                 fails += 'FAILED: ' + test.path + '\n'
                 if (stopIfFailed) break main;
             }
+            await sleep(1);
+            console.log(process.memoryUsage());
         }
     }
     if (fails) console.log(fails)

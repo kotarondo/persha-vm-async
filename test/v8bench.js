@@ -45,7 +45,7 @@ async function run() {
     await load('raytrace.js')
     await load('earley-boyer.js')
     await load('regexp.js')
-    await load('splay.js')
+    // await load('splay.js')
     await load('navier-stokes.js')
     await load("run.js")
     test_success()
