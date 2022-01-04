@@ -126,6 +126,7 @@ results.push(d.toISOString());
 
 results.push(new Date(2022, 8, 1).toISOString());
 results.push(new Date(2022, 11, 1).toISOString());
+results.push(Date.UTC(1e100, 0, 1));
 
 throw [results, [
     1582889025000,
@@ -168,5 +169,6 @@ throw [results, [
     '1999-12-31T15:00:00.000Z',
     '2000-01-01T00:00:00.000Z',
     '2022-08-31T15:00:00.000Z',
-    '2022-11-30T15:00:00.000Z'
+    '2022-11-30T15:00:00.000Z',
+    NaN
 ], "DONE"];

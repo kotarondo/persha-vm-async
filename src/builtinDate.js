@@ -66,7 +66,9 @@ function TimeFromYear(y) {
 }
 
 function YearFromTime(t) {
-    var y = 1970 + Math.floor(Day(t) / 365.2425);
+    var y = Math.floor(Day(t) / 365.2425);
+    if (Math.abs(y) > 300000) return NaN;
+    y += 1970;
     if (TimeFromYear(y) <= t) {
         while (TimeFromYear(y + 1) <= t) {
             y = y + 1;

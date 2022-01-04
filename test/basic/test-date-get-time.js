@@ -52,10 +52,10 @@ results.push(nanc);
 
 var fc = 0;
 for (var i = -10000; i < 10000; i++) {
-    d = new Date(2000, 0, 1);
+    d = new Date(i, 0, 1);
     d.setFullYear(i);
     if (i == d.getFullYear()) fc++;
-    d = new Date(2000, 10, 31, 23, 59, 59, 999);
+    d = new Date(i, 11, 31, 23, 59, 59, 999);
     d.setFullYear(i);
     if (i == d.getFullYear()) fc++;
 }
