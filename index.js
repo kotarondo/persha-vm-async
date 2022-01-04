@@ -39,15 +39,6 @@ var prefix = "_prsh";
 var index = 0;
 var filenames = ['helper.js', 'unicode.js', 'regexp_compiler.js', 'compiler.js', 'builtinArray.js', 'builtinBoolean.js', 'builtinDate.js', 'builtinError.js', 'builtinFunction.js', 'builtinGlobal.js', 'builtinJSON.js', 'builtinMath.js', 'builtinNumber.js', 'builtinObject.js', 'builtinRegExp.js', 'builtinString.js', 'conversion.js', 'expression.js', 'function.js', 'statement.js', 'program.js', 'parser.js', 'execution.js', 'types.js', 'realm.js', 'misc.js'];
 
-function registerName(name, map) {
-    if (/\W/.test(name) || map[name]) {
-        var err = new Error("NG: invalid name:" + name);
-        debugger;
-        throw err;
-    }
-    map[name] = prefix + (index++);
-}
-
 class VM {
     constructor(plugins = []) {
         var context = Object.create(null);
@@ -85,7 +76,9 @@ class VM {
                     default:
                         return;
                 }
-                registerName(name, map);
+                assert(!/\W/.test(name));
+                assert(!map[name]);
+                map[name] = prefix + (index++);
             });
         }
         for (var code of codes) {

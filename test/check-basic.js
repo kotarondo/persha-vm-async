@@ -23,6 +23,7 @@ async function test() {
                 "test-line-directive.js",
                 "test-compound-changing-scope.js",
                 "test-completion-value.js",
+                "test-date-to-string.js",
             ].includes(filename)) continue
         console.log(filename)
         var source = fs.readFileSync(filename, 'utf8')
