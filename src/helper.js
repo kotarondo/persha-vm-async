@@ -31,6 +31,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/* istanbul ignore next */
 function assert(condition, info) {
     if (!condition) {
         var err = new Error("NG: assertion failed: " + info);
@@ -94,14 +95,14 @@ function mvDigitChar(c) {
 
 function toDigitChar(x) {
     if ((0 <= x) && (x <= 9)) return charCode2String(x + 0x30);
-    if ((10 <= x) && (x <= 35)) return charCode2String(x + (0x61 - 10)); // 'a' - 'z'
-    assert(false, x);
+    assert((10 <= x) && (x <= 35));
+    return charCode2String(x + (0x61 - 10)); // 'a' - 'z'
 }
 
 function toUpperDigitChar(x) {
     if ((0 <= x) && (x <= 9)) return charCode2String(x + 0x30);
-    if ((10 <= x) && (x <= 35)) return charCode2String(x + (0x41 - 10)); // 'A' - 'Z'
-    assert(false, x);
+    assert((10 <= x) && (x <= 35));
+    return charCode2String(x + (0x41 - 10)); // 'A' - 'Z'
 }
 
 function isDigitChar(c) {
@@ -152,10 +153,6 @@ function isInternalError(x) {
     if (x.Class) return false;
     debugger;
     return true;
-}
-
-function compareNumber(a, b) {
-    return Number(a) - Number(b);
 }
 
 function ReturnUndefined() {

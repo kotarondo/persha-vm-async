@@ -99,7 +99,7 @@ function MonthFromTime(t) {
     if (dayWithinYear < 273 + inLeapYear) return 8;
     if (dayWithinYear < 304 + inLeapYear) return 9;
     if (dayWithinYear < 334 + inLeapYear) return 10;
-    if (dayWithinYear < 365 + inLeapYear) return 11;
+    return 11;
 }
 
 function DayWithinYear(t) {
@@ -119,7 +119,7 @@ function DateFromTime(t) {
     if (monthFromTime === 8) return DayWithinYear(t) - 242 - InLeapYear(t);
     if (monthFromTime === 9) return DayWithinYear(t) - 272 - InLeapYear(t);
     if (monthFromTime === 10) return DayWithinYear(t) - 303 - InLeapYear(t);
-    if (monthFromTime === 11) return DayWithinYear(t) - 333 - InLeapYear(t);
+    return DayWithinYear(t) - 333 - InLeapYear(t);
 }
 
 function WeekDay(t) {
