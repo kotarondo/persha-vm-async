@@ -117,7 +117,11 @@ results.push(d.toISOString());
 d.setYear(NaN);
 d.setYear(2000);
 results.push(d.toISOString());
+d.setFullYear(NaN);
 d.setFullYear(2000);
+results.push(d.toISOString());
+d.setUTCFullYear(NaN);
+d.setUTCFullYear(2000);
 results.push(d.toISOString());
 
 results.push(new Date(2022, 8, 1).toISOString());
@@ -162,6 +166,7 @@ throw [results, [
     '1967-10-28T18:55:44.333Z',
     '1999-12-31T15:00:00.000Z',
     '1999-12-31T15:00:00.000Z',
+    '2000-01-01T00:00:00.000Z',
     '2022-08-31T15:00:00.000Z',
     '2022-11-30T15:00:00.000Z'
 ], "DONE"];
