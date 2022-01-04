@@ -63,6 +63,31 @@ Object.defineProperty(a, '2', { configurable: false });
 a.length = 1;
 results.push(a);
 
+(function() {
+    'use strict';
+    try {
+        var a = [5, 6, 7, 8];
+        Object.defineProperty(a, '2', { configurable: false });
+        a.length = 1;
+    } catch (err) {
+        results.push(err instanceof TypeError);
+    }
+})();
+
+var a = [15];
+Object.defineProperty(a, 'length', { writable: false });
+var p = [25, 26, 27, 28];
+a.__proto__ = p;
+a[2] = 3;
+results.push([a.length, a[2]]);
+
+var a = [15];
+var p = [25, , 27, 28];
+a.__proto__ = p;
+Object.preventExtensions(a);
+a[1] = 3;
+results.push([a.length, a[1]]);
+
 throw [results, [
     '[object String]',
     '',
@@ -82,5 +107,8 @@ throw [results, [
     true,
     [5, , , 7],
     [5, 6, 7],
+    true,
+    [1, 27],
+    [1, 26],
 
 ], "DONE"];
