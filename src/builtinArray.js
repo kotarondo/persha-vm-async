@@ -102,6 +102,7 @@ async function Array_prototype_toLocaleString(thisValue, argumentsList) {
     }
     var k = 1;
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var S = R + separator;
         var nextElement = await array.Get(k);
         if (nextElement === undefined || nextElement === null) {
@@ -132,6 +133,7 @@ async function Array_prototype_concat(thisValue, argumentsList) {
             var k = 0;
             var len = await E.Get("length");
             while (k < len) {
+                if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                 var P = k;
                 var exists = E.HasProperty(P);
                 if (exists === true) {
@@ -170,6 +172,7 @@ async function Array_prototype_join(thisValue, argumentsList) {
     }
     var k = 1;
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var S = R + sep;
         var element = await O.Get(k);
         if (element === undefined || element === null) {
@@ -222,6 +225,7 @@ async function Array_prototype_reverse(thisValue, argumentsList) {
     var middle = Math.floor(len / 2);
     var lower = 0;
     while (lower !== middle) {
+        if ((stepsLimit -= 20) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var upper = len - lower - 1;
         var upperP = upper;
         var lowerP = lower;
@@ -255,6 +259,7 @@ async function Array_prototype_shift(thisValue, argumentsList) {
     var first = await O.Get(0);
     var k = 1;
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var from = k;
         var to = k - 1;
         var fromPresent = O.HasProperty(from);
@@ -296,6 +301,7 @@ async function Array_prototype_slice(thisValue, argumentsList) {
     }
     var n = 0;
     while (k < final) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
         if (kPresent === true) {
@@ -316,6 +322,7 @@ async function Array_prototype_sort(thisValue, argumentsList) {
     var obj = await ToObject(thisValue);
     var len = await ToUint32(await obj.Get("length"));
     var perm = [];
+    if ((stepsLimit -= 100 * len) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     for (var i = 0; i < len; i++) {
         perm[i] = i;
     }
@@ -362,6 +369,7 @@ async function Array_prototype_sort(thisValue, argumentsList) {
     }
 
     async function SortCompare(j, k) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var jString = j;
         var kString = k;
         var hasj = obj.HasProperty(jString);
@@ -406,6 +414,7 @@ async function Array_prototype_splice(thisValue, argumentsList) {
     }
     var k = 0;
     while (k < actualDeleteCount) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var from = actualStart + k;
         var fromPresent = O.HasProperty(from);
         if (fromPresent === true) {
@@ -424,6 +433,7 @@ async function Array_prototype_splice(thisValue, argumentsList) {
     if (itemCount < actualDeleteCount) {
         var k = actualStart;
         while (k < (len - actualDeleteCount)) {
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var from = k + actualDeleteCount;
             var to = k + itemCount;
             var fromPresent = O.HasProperty(from);
@@ -437,12 +447,14 @@ async function Array_prototype_splice(thisValue, argumentsList) {
         }
         var k = len;
         while (k > (len - actualDeleteCount + itemCount)) {
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             O.Delete(k - 1, true);
             k--;
         }
     } else if (itemCount > actualDeleteCount) {
         var k = (len - actualDeleteCount);
         while (k > actualStart) {
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var from = k + actualDeleteCount - 1;
             var to = k + itemCount - 1;
             var fromPresent = O.HasProperty(from);
@@ -472,6 +484,7 @@ async function Array_prototype_unshift(thisValue, argumentsList) {
     var argCount = argumentsList.length;
     var k = len;
     while (k > 0) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var from = k - 1;
         var to = k + argCount - 1;
         var fromPresent = O.HasProperty(from);
@@ -486,6 +499,7 @@ async function Array_prototype_unshift(thisValue, argumentsList) {
     var j = 0;
     var items = argumentsList;
     while (j !== items.length) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var E = items[j];
         await O.Put(j, E, true);
         j++;
@@ -516,6 +530,7 @@ async function Array_prototype_indexOf(thisValue, argumentsList) {
         }
     }
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var kPresent = O.HasProperty(k);
         if (kPresent === true) {
             var elementK = await O.Get(k);
@@ -545,6 +560,7 @@ async function Array_prototype_lastIndexOf(thisValue, argumentsList) {
         var k = len - Math.abs(n);
     }
     while (k >= 0) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var kPresent = O.HasProperty(k);
         if (kPresent === true) {
             var elementK = await O.Get(k);
@@ -570,6 +586,7 @@ async function Array_prototype_every(thisValue, argumentsList) {
     }
     var k = 0;
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
         if (kPresent === true) {
@@ -596,6 +613,7 @@ async function Array_prototype_some(thisValue, argumentsList) {
     }
     var k = 0;
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
         if (kPresent === true) {
@@ -622,6 +640,7 @@ async function Array_prototype_forEach(thisValue, argumentsList) {
     }
     var k = 0;
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
         if (kPresent === true) {
@@ -648,6 +667,7 @@ async function Array_prototype_map(thisValue, argumentsList) {
     var A = await Array_Construct([len]);
     var k = 0;
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
         if (kPresent === true) {
@@ -676,6 +696,7 @@ async function Array_prototype_filter(thisValue, argumentsList) {
     var k = 0;
     var to = 0;
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
         if (kPresent === true) {
@@ -705,6 +726,7 @@ async function Array_prototype_reduce(thisValue, argumentsList) {
     } else {
         var kPresent = false;
         while (kPresent === false && (k < len)) {
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var Pk = k;
             var kPresent = O.HasProperty(Pk);
             if (kPresent === true) {
@@ -715,6 +737,7 @@ async function Array_prototype_reduce(thisValue, argumentsList) {
         if (kPresent === false) throw VMTypeError();
     }
     while (k < len) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
         if (kPresent === true) {
@@ -740,6 +763,7 @@ async function Array_prototype_reduceRight(thisValue, argumentsList) {
     } else {
         var kPresent = false;
         while (kPresent === false && (k >= 0)) {
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var Pk = k;
             var kPresent = O.HasProperty(Pk);
             if (kPresent === true) {
@@ -750,6 +774,7 @@ async function Array_prototype_reduceRight(thisValue, argumentsList) {
         if (kPresent === false) throw VMTypeError();
     }
     while (k >= 0) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
         if (kPresent === true) {
@@ -784,6 +809,7 @@ async function Array_DefineOwnProperty(P, Desc, Throw) {
         var succeeded = await default_DefineOwnProperty.call(A, "length", newLenDesc, Throw);
         if (succeeded === false) return false;
         while (newLen < oldLen) {
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             oldLen = oldLen - 1;
             var deleteSucceeded = A.Delete(oldLen, false);
             if (deleteSucceeded === false) {
@@ -852,6 +878,7 @@ async function Array_FastPut(P, V, Throw) {
         }
         ownDesc.Value = newLen;
         while (newLen < oldLen) {
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             oldLen = oldLen - 1;
             var deleteSucceeded = O.Delete(oldLen, false);
             if (deleteSucceeded === false) {

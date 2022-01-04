@@ -151,7 +151,7 @@ function isInternalError(x) {
         return false;
     }
     if (x.Class) return false;
-    debugger;
+    if (x instanceof ErrorCapsule) return true;
     return true;
 }
 
