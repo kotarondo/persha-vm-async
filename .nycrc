@@ -1,4 +1,5 @@
 {
+    "clean": false,
     "reporter": [ "html", "text" ]
 }
 

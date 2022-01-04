@@ -128,6 +128,12 @@ results.push(new Date(2022, 8, 1).toISOString());
 results.push(new Date(2022, 11, 1).toISOString());
 results.push(Date.UTC(1e100, 0, 1));
 
+try {
+    Date.prototype.setTime.call(new String('abc'));
+} catch (err) {
+    results.push(err instanceof TypeError);
+}
+
 throw [results, [
     1582889025000,
     '2020-02-28T23:35:58.456Z',
@@ -170,5 +176,6 @@ throw [results, [
     '2000-01-01T00:00:00.000Z',
     '2022-08-31T15:00:00.000Z',
     '2022-11-30T15:00:00.000Z',
-    NaN
+    NaN,
+    true,
 ], "DONE"];
