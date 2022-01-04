@@ -5,7 +5,8 @@
 var results = [];
 
 var Math;
-function test(){
+
+function test() {
     results.push(Math);
 }
 

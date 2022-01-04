@@ -14,7 +14,9 @@ var literals = [
     (-1 / Infinity),
 ];
 
-void function() {
+void
+
+function() {
     for (var i in literals) {
         var x = -1;
         switch (literals[i]) {

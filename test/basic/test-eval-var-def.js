@@ -9,7 +9,9 @@ var x2 = "b";
 var x3 = "c";
 var x4 = "d";
 
-void function() {
+void
+
+function() {
     var x1 = 1;
     eval("var x2=2;");
     var x3 = 3;

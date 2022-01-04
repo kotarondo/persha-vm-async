@@ -5,13 +5,17 @@
 var results = [];
 
 var x = 'A';
-void function() {
+void
+
+function() {
     x += eval("var x; x = 'B'");
 }();
 results.push(x);
 
 var x = 'A';
-void function() {
+void
+
+function() {
     eval("var x; x = 'B'");
     x += eval("delete x");
 }();

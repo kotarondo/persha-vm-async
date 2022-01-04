@@ -8,7 +8,9 @@ function y() {
     eval("var x=2");
 }
 
-void function() {
+void
+
+function() {
     y();
     try {
         throw 3;
