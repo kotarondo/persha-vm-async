@@ -6,8 +6,8 @@ require('./harness')
 process.chdir('basic')
 
 var vm = new VM()
-vm.context.LocalTZA = -8 * 3600000
-vm.context.LocalTZAString = "PDT"
+vm.context.LocalTZA = +9 * 3600000
+vm.context.LocalTZAString = "JST"
 
 if (process.argv.length <= 2) {
     var filenames = fs.readdirSync(".")
