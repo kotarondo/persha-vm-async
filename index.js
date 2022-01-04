@@ -55,7 +55,7 @@ class VM {
         var codes = [];
         for (var filename of filenames) {
             var text = fs.readFileSync(path.join(__dirname, 'src', filename), 'utf8');
-            codes.push({ filename, text });
+            codes.push({ filename: 'src/' + filename, text });
         }
         codes = codes.concat(plugins);
         for (var code of codes) {
