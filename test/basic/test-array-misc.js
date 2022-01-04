@@ -81,13 +81,6 @@ a.__proto__ = p;
 a[2] = 3;
 results.push([a.length, a[2]]);
 
-var a = [15];
-var p = [25, , 27, 28];
-a.__proto__ = p;
-Object.preventExtensions(a);
-a[1] = 3;
-results.push([a.length, a[1]]);
-
 throw [results, [
     '[object String]',
     '',
@@ -109,6 +102,4 @@ throw [results, [
     [5, 6, 7],
     true,
     [1, 27],
-    [1, 26],
-
 ], "DONE"];
