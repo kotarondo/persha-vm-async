@@ -10,4 +10,9 @@ results.push(d.toLocaleString() == d.toString());
 results.push(d.toLocaleDateString() == d.toDateString());
 results.push(d.toLocaleTimeString() == d.toTimeString());
 
-throw [results, [true, true, true, true], "DONE"];
+var x = d.toUTCString();
+var y = d.toISOString();
+var m = /^([0-9-]*)T([0-9:]*)\.[0-9]*Z$/.exec(y);
+results.push(x == m[1] + ' ' + m[2] + ' UTC');
+
+throw [results, [true, true, true, true, true], "DONE"];

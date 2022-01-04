@@ -114,6 +114,10 @@ results.push(d.toISOString());
 d.setYear(1967);
 results.push(d.toISOString());
 
+d.setYear(NaN);
+d.setYear(2000);
+results.push(d.toISOString());
+
 throw [results, [
     1582889025000,
     '2020-02-28T23:35:58.456Z',
@@ -151,4 +155,5 @@ throw [results, [
     '2350-10-28T18:55:44.333Z',
     '1967-10-28T18:55:44.333Z',
     '1967-10-28T18:55:44.333Z',
+    '1999-12-31T15:00:00.000Z',
 ], "DONE"];
