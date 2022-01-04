@@ -66,16 +66,15 @@ function TimeFromYear(y) {
 }
 
 function YearFromTime(t) {
-    var y = Math.floor(Day(t) / 365.2425);
+    var y = 1970 + Math.floor(Day(t) / 365.2425);
     if (TimeFromYear(y) <= t) {
         while (TimeFromYear(y + 1) <= t) {
             y = y + 1;
         }
-        return y;
-    }
-    y = y - 1;
-    while (TimeFromYear(y) > t) {
-        y = y - 1;
+    } else {
+        while (TimeFromYear(y) > t) {
+            y = y - 1;
+        }
     }
     return y;
 }

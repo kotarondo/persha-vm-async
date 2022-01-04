@@ -50,6 +50,17 @@ if (isNaN(d.getUTCMilliseconds())) nanc++;
 if (isNaN(d.getYear())) nanc++;
 results.push(nanc);
 
+var fc = 0;
+for (var i = -10000; i < 10000; i++) {
+    d = new Date(2000, 0, 1);
+    d.setFullYear(i);
+    if (i == d.getFullYear()) fc++;
+    d = new Date(2000, 10, 31, 23, 59, 59, 999);
+    d.setFullYear(i);
+    if (i == d.getFullYear()) fc++;
+}
+results.push(fc);
+
 throw [results, [
     1609457003000,
     -540,
@@ -71,4 +82,5 @@ throw [results, [
     0,
     121,
     19,
+    40000
 ], "DONE"];
