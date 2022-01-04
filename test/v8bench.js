@@ -28,9 +28,9 @@ async function Global_print(thisValue, argumentsList) {
     await sleep(1000);
 }
 
-`;
+`
 
-var vm, realm;
+var vm, realm
 
 async function load(f) {
     await vm.evaluateProgram(realm, fs.readFileSync(f, 'utf8'), f)
@@ -51,4 +51,4 @@ async function run() {
     await load("run.js")
 }
 
-run().then(test_success).catch(test_failed);
+run().then(test_success).catch(test_failed)

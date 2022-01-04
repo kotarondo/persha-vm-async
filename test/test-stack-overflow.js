@@ -12,11 +12,11 @@ async function test() {
 }
 
 async function test1(realm, para, text, args) {
-    var begin = Date.now();
+    var begin = Date.now()
     var { type, value } = await vm.evaluateFunction(realm, para, text, 'test.js', args)
-    var elapsed = Date.now() - begin;
-    assert(type === 'throw' && String(value) === 'RangeError: stack overflow');
-    console.log('elapsed:' + elapsed, text);
+    var elapsed = Date.now() - begin
+    assert(type === 'throw' && String(value) === 'RangeError: stack overflow')
+    console.log('elapsed:' + elapsed, text)
 }
 
-test().then(test_success).catch(test_failed);
+test().then(test_success).catch(test_failed)

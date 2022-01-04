@@ -66,10 +66,10 @@ var fails = ''
 
 var sta_source = fs.readFileSync('sta.js', 'utf8')
 var sta_patch_source = fs.readFileSync('sta_patch.js', 'utf8')
-var vm = new VM();
+var vm = new VM()
 // for Tests S15.9.3.1_A5_T*.js
-vm.context.LocalTZA = -8 * 3600000;
-vm.context.LocalTZAString = "PDT";
+vm.context.LocalTZA = -8 * 3600000
+vm.context.LocalTZAString = "PDT"
 
 async function doTest(test) {
     console.log(test.path)
@@ -127,21 +127,21 @@ async function test() {
                 console.log('elapsed: ' + (end - begin) + ' ms')
             }
             if (ok === true) {
-                passCount++;
+                passCount++
             } else {
-                failCount++;
+                failCount++
                 fails += 'FAILED: ' + test.path + '\n'
-                if (stopIfFailed) break main;
+                if (stopIfFailed) break main
             }
-            await sleep(1);
-            // console.log(process.memoryUsage());
+            await sleep(1)
+            // console.log(process.memoryUsage())
         }
     }
     if (fails) console.log(fails)
     console.log('pass: ' + passCount)
     console.log('fail: ' + failCount)
     console.log('skip: ' + skipCount)
-    if (failCount > 0) process.exit(1);
+    if (failCount > 0) process.exit(1)
 }
 
-test().then(test_success).catch(test_failed);
+test().then(test_success).catch(test_failed)

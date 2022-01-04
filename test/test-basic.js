@@ -6,6 +6,8 @@ require('./harness')
 process.chdir('basic')
 
 var vm = new VM()
+vm.context.LocalTZA = -8 * 3600000
+vm.context.LocalTZAString = "PDT"
 
 if (process.argv.length <= 2) {
     var filenames = fs.readdirSync(".")
@@ -20,18 +22,13 @@ async function test() {
         console.log(filename)
         var source = fs.readFileSync(filename, 'utf8')
         var realm = await vm.createRealm()
-        try {
-            var { type, value } = await vm.evaluateProgram(realm, source, filename)
-            if (type === "throw" && Array.isArray(value) && value[2] === "DONE") {
-                assert.deepStrictEqual(value[0], value[1])
-            } else {
-                throw value;
-            }
-        } catch (err) {
-            console.log('failed', err)
-            process.exit(1);
+        var { type, value } = await vm.evaluateProgram(realm, source, filename)
+        if (type === "throw" && Array.isArray(value) && value[2] === "DONE") {
+            assert.deepStrictEqual(value[0], value[1])
+        } else {
+            throw value
         }
     }
 }
 
-test().then(test_success).catch(test_failed);
+test().then(test_success).catch(test_failed)

@@ -5,7 +5,9 @@
 require('./harness')
 process.chdir('basic')
 
-var vm = require('vm');
+process.env.TZ = "Asia/Tokyo"
+
+var vm = require('vm')
 
 if (process.argv.length <= 2) {
     var filenames = fs.readdirSync(".")
@@ -30,13 +32,13 @@ async function test() {
         } catch (err) {
             if (Array.isArray(err) && err[2] === "DONE") {
                 assert.deepStrictEqual(err[0], err[1])
-                continue;
+                continue
             } else {
-                throw err;
+                throw err
             }
         }
-        throw value;
+        throw value
     }
 }
 
-test().then(test_success).catch(test_failed);
+test().then(test_success).catch(test_failed)
