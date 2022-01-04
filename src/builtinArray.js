@@ -837,7 +837,7 @@ async function Array_FastPut(P, V, Throw) {
                 var index = ToArrayIndex(P);
                 if (index >= newLen) {
                     if (O.properties[P].Configurable === false) {
-                        newLen = index;
+                        newLen = index + 1;
                     }
                 }
             }
