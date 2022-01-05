@@ -335,7 +335,7 @@ async function Array_prototype_sort(thisValue, argumentsList) {
     var len = await ToUint32(await obj.Get("length"));
     var perm = [];
     /* istanbul ignore next */
-    if ((stepsLimit -= 100 * len) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+    if ((stepsLimit -= 30 * len) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     for (var i = 0; i < len; i++) {
         perm[i] = i;
     }
