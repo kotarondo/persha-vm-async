@@ -49,6 +49,8 @@ async function Function_Construct(argumentsList) {
         var P = await ToString(firstArg);
         var k = 2;
         while (k < argCount) {
+            /* istanbul ignore next */
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var nextArg = argumentsList[k - 1];
             var P = P + "," + await ToString(nextArg);
             k++;
@@ -75,6 +77,8 @@ async function Function_prototype_toString(thisValue, argumentsList) {
     if (IsCallable(func) === false) throw VMTypeError();
     var name = await func.Get("name") || "anonymous";
     while (func.TargetFunction) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         func = func.TargetFunction;
     }
     if (func.Code) {
@@ -92,6 +96,8 @@ async function get_Function_prototype_name(thisValue, argumentsList) {
     var func = thisValue;
     if (IsCallable(func) === false) throw VMTypeError();
     while (func.TargetFunction) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         func = func.TargetFunction;
     }
     if (func.Code) {
@@ -120,6 +126,8 @@ async function Function_prototype_apply(thisValue, argumentsList) {
     var argList = [];
     var index = 0;
     while (index < n) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var nextArg = await argArray.Get(index);
         argList.push(nextArg);
         index = index + 1;
@@ -134,6 +142,8 @@ async function Function_prototype_call(thisValue, argumentsList) {
     var argList = [];
     if (argumentsList.length > 1) {
         for (var i = 1; i < argumentsList.length; i++) {
+            /* istanbul ignore next */
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             argList.push(argumentsList[i]);
         }
     }
@@ -146,6 +156,8 @@ async function Function_prototype_bind(thisValue, argumentsList) {
     if (IsCallable(Target) === false) throw VMTypeError();
     var A = [];
     for (var i = 1; i < argumentsList.length; i++) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         A.push(argumentsList[i]);
     }
     var F = VMObject(Class_BindFunction);
@@ -206,6 +218,8 @@ async function Function_HasInstance(V) {
     var O = await F.Get("prototype");
     if (typeof(O) !== 'object' || O === null) throw VMTypeError();
     while (true) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var V = V.Prototype;
         if (V === null) return false;
         if (O === V) return true;
