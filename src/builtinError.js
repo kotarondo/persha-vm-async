@@ -270,22 +270,3 @@ async function get_Error_prototype_stack(thisValue, argumentsList) {
     }
     return A.join("\n    at ");
 }
-
-async function Error_prototype_getStackTraceEntry(thisValue, argumentsList) {
-    var index = await ToUint32(argumentsList[0]);
-    var stackTrace = thisValue.stackTrace;
-    if (!stackTrace) return;
-    if (!stackTrace[index]) return;
-    var func = stackTrace[index].func;
-    var code = stackTrace[index].code;
-    var pos = stackTrace[index].pos;
-    var info = {};
-    Parser.locateDebugInfo(code, pos, info);
-    var obj = intrinsic_Object();
-    define(obj, "functionObject", func);
-    define(obj, "functionName", info.functionName);
-    define(obj, "filename", info.filename);
-    define(obj, "lineNumber", info.lineNumber);
-    define(obj, "columnNumber", info.columnNumber);
-    return obj;
-}

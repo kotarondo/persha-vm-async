@@ -449,7 +449,6 @@ function initializeRealmClass(realmObjectClasses = {}) {
     realmDefineFunction(realmC_Error_prototype, "toString", 0, Error_prototype_toString);
     realmDefineWritable(realmC_Error, "stackTraceLimit", 10);
     realmDefineAccessor(realmC_Error_prototype, "stack", get_Error_prototype_stack, undefined);
-    realmDefineFunction(realmC_Error_prototype, "getStackTraceEntry", 1, Error_prototype_getStackTraceEntry);
 
     realmDefineFinal(realmC_EvalError, "length", 1);
     realmDefineFinalRefRealm(realmC_EvalError, "prototype", "EvalError_prototype");

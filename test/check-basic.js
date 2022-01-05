@@ -24,6 +24,7 @@ async function test() {
                 "test-compound-changing-scope.js",
                 "test-completion-value.js",
                 "test-date-to-string.js",
+                "test-error-stack-trace.js",
             ].includes(filename)) continue
         console.log(filename)
         var source = fs.readFileSync(filename, 'utf8')
