@@ -15,5 +15,5 @@ results.push(fn1.bind(null, 1).toString());
 
 throw [results, [
     true,
-    'function fn1(a){return a+1;}',
+    'function fn1(a){return a + 1; }',
 ], "DONE"];
