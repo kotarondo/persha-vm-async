@@ -225,9 +225,10 @@ function saveExecutionContext() {
         runningSourcePos,
         outerExecutionContext,
     });
-    if (stackDepth > stackDepthLimit) {
-        throw VMRangeError("stack overflow");
-    }
+    /* istanbul ignore next */
+    if (stackDepth > stackDepthLimit) throw new ErrorCapsule(VMRangeError("stack overflow"));
+    /* istanbul ignore next */
+    if ((stepsLimit -= 1000) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
 }
 
 function exitExecutionContext() {

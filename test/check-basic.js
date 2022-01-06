@@ -25,6 +25,7 @@ async function test() {
                 "test-completion-value.js",
                 "test-date-to-string.js",
                 "test-error-stack-trace.js",
+                "test-function-misc2.js",
             ].includes(filename)) continue
         console.log(filename)
         var source = fs.readFileSync(filename, 'utf8')

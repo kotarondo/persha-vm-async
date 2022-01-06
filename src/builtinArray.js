@@ -830,6 +830,7 @@ async function Array_DefineOwnProperty(P, Desc, Throw) {
         var newLenDesc = DataPropertyDescriptor(newLen, Desc.Writable, Desc.Enumerable, Desc.Configurable);
         if (newLen >= oldLen) return await default_DefineOwnProperty.call(A, "length", newLenDesc, Throw);
         if (oldLenDesc.Writable === false) {
+            /* istanbul ignore else */
             if (Throw === true) throw VMTypeError();
             else return false;
         }
@@ -840,6 +841,7 @@ async function Array_DefineOwnProperty(P, Desc, Throw) {
             var newLenDesc = DataPropertyDescriptor(newLenDesc.Value, true, newLenDesc.Enumerable, newLenDesc.Configurable);
         }
         var succeeded = await default_DefineOwnProperty.call(A, "length", newLenDesc, Throw);
+        /* istanbul ignore if */
         if (succeeded === false) return false;
         while (newLen < oldLen) {
             /* istanbul ignore next */
@@ -850,6 +852,7 @@ async function Array_DefineOwnProperty(P, Desc, Throw) {
                 var newLenDesc = DataPropertyDescriptor(oldLen + 1, newWritable ? newLenDesc.Writable : false,
                     newLenDesc.Enumerable, newLenDesc.Configurable);
                 await default_DefineOwnProperty.call(A, "length", newLenDesc, false);
+                /* istanbul ignore else */
                 if (Throw === true) throw VMTypeError();
                 else return false;
             }
@@ -867,6 +870,7 @@ async function Array_DefineOwnProperty(P, Desc, Throw) {
         }
         var succeeded = await default_DefineOwnProperty.call(A, P, Desc, false);
         if (succeeded === false) {
+            /* istanbul ignore else */
             if (Throw === true) throw VMTypeError();
             else return false;
         }
