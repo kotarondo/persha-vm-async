@@ -33,6 +33,7 @@
 
 // ECMAScript 5.1: 15.12 The JSON Object
 
+/* istanbul ignore next */
 async function JSONParser(text) {
     // placeholder
 }

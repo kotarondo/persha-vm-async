@@ -212,6 +212,7 @@ function Decode(string, reservedSet) {
                 var V = UTF8decode(Octets);
                 if (V < 0x10000) {
                     var C = charCode2String(V);
+                    /* istanbul ignore else */
                     if (isIncluded(C, reservedSet) === false) {
                         var S = C;
                     } else {
