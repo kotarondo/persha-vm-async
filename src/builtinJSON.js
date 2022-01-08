@@ -258,6 +258,8 @@ async function JSON_parse(thisValue, argumentsList) {
     var text = argumentsList[0];
     var reviver = argumentsList[1];
     var JText = await ToString(text);
+    /* istanbul ignore next */
+    if ((stepsLimit -= 10 * JText.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     var unfiltered = await JSONParser(JText);
     if (IsCallable(reviver) === true) {
         var root = intrinsic_Object();
@@ -266,6 +268,8 @@ async function JSON_parse(thisValue, argumentsList) {
     } else return unfiltered;
 
     async function Walk(holder, name) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var val = await holder.Get(name);
         if (Type(val) === TYPE_Object) {
             if (val.Class === "Array") {
@@ -285,6 +289,8 @@ async function JSON_parse(thisValue, argumentsList) {
                 var next = val.enumerator(true, true);
                 var P;
                 while ((P = next()) !== undefined) {
+                    /* istanbul ignore next */
+                    if ((stepsLimit -= 1) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                     keys.push(P);
                 }
                 for (var i = 0; i < keys.length; i++) {
@@ -317,6 +323,8 @@ async function JSON_stringify(thisValue, argumentsList) {
             var PropertyList = [];
             var length = await replacer.Get("length");
             for (var i = 0; i < length; i++) {
+                /* istanbul ignore next */
+                if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                 if (replacer.HasOwnProperty(i) === false) {
                     continue;
                 }
@@ -365,6 +373,8 @@ async function JSON_stringify(thisValue, argumentsList) {
     return await Str("", wrapper);
 
     async function Str(key, holder) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var value = await holder.Get(key);
         if (Type(value) === TYPE_Object) {
             var toJSON = await value.Get("toJSON");
@@ -400,9 +410,13 @@ async function JSON_stringify(thisValue, argumentsList) {
     }
 
     function Quote(value) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var product = [];
         product.push('"');
         for (var i = 0; i < value.length; i++) {
+            /* istanbul ignore next */
+            if ((stepsLimit -= 1) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var C = value[i];
             if (C === '"') {
                 product.push('\\"');
@@ -431,6 +445,8 @@ async function JSON_stringify(thisValue, argumentsList) {
     }
 
     async function JO(value) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         if (isIncluded(value, stack)) throw VMTypeError();
         stack.push(value);
         var stepback = indent;
@@ -442,6 +458,8 @@ async function JSON_stringify(thisValue, argumentsList) {
             var next = value.enumerator(true, true);
             var P;
             while ((P = next()) !== undefined) {
+                /* istanbul ignore next */
+                if ((stepsLimit -= 1) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                 K.push(P);
             }
         }
@@ -475,6 +493,8 @@ async function JSON_stringify(thisValue, argumentsList) {
     }
 
     async function JA(value) {
+        /* istanbul ignore next */
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         if (isIncluded(value, stack)) throw VMTypeError();
         stack.push(value);
         var stepback = indent;
