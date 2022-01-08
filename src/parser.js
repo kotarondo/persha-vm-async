@@ -49,6 +49,7 @@ const Parser = (function() {
     var isLineSeparatedAhead;
     var isLineSeparatedBehind;
     var prevTokenPos;
+    var prevTokenEndPos;
     var tokenPos;
     var tokenEndPos;
     var currentPos;
@@ -75,6 +76,21 @@ const Parser = (function() {
     var lexEnv;
 
     function setup(type, parameterText, codeText, strictMode, filename) {
+        current = undefined;
+        token = undefined;
+        value = undefined;
+        isNumericLiteral = undefined;
+        isStringLiteral = undefined;
+        isIdentifierName = undefined;
+        isEscaped = undefined;
+        isLineSeparatedAhead = undefined;
+        isLineSeparatedBehind = undefined;
+        prevTokenPos = undefined;
+        prevTokenEndPos = undefined;
+        tokenPos = undefined;
+        tokenEndPos = undefined;
+        currentPos = undefined;
+
         assert(strictMode !== undefined);
         source = codeText;
         strict = strictMode;
@@ -88,6 +104,7 @@ const Parser = (function() {
         lastIdentifier = undefined;
         varEnv = null;
         lexEnv = null;
+
         setPosition(0);
         skipSpaces();
         proceedToken();
@@ -106,7 +123,7 @@ const Parser = (function() {
             evaluate: undefined,
             sourceObject: sourceObject,
             index: subcodes.length,
-            startPos: undefined,
+            startPos: prevTokenEndPos || 0,
             endPos: undefined,
             functionName: undefined,
             varEnv: undefined,
@@ -208,7 +225,7 @@ const Parser = (function() {
     }
 
     function readSourceElements() {
-        code.startPos = tokenPos;
+        var pos = tokenPos;
         while (isStringLiteral) {
             if (!(isLineSeparatedBehind || current === ';' || current === '}')) {
                 break;
@@ -221,8 +238,8 @@ const Parser = (function() {
             }
             readStatement();
         }
-        if (code.startPos !== tokenPos) {
-            setPosition(code.startPos);
+        if (pos !== tokenPos) {
+            setPosition(pos);
             proceedToken();
         }
         var statements = [];
@@ -1212,6 +1229,7 @@ const Parser = (function() {
         var t = token;
         isLineSeparatedAhead = isLineSeparatedBehind;
         prevTokenPos = tokenPos;
+        prevTokenEndPos = tokenEndPos;
         tokenPos = currentPos;
         token = readToken();
         tokenEndPos = currentPos;

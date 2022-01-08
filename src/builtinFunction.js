@@ -64,9 +64,11 @@ async function Function_Construct(argumentsList) {
         if (e instanceof Parser.SyntaxError) {
             throw VMSyntaxError(e.message);
         }
+        /* istanbul ignore else */
         if (e instanceof Parser.ReferenceError) {
             throw VMReferenceError(e.message);
         }
+        /* istanbul ignore next */
         throw e;
     }
     return CreateFunction(code, realm.theGlobalEnvironment);
@@ -165,6 +167,7 @@ async function Function_prototype_bind(thisValue, argumentsList) {
     F.BoundThis = thisArg;
     F.BoundArgs = A;
     F.Prototype = realm.Function_prototype;
+    /* istanbul ignore else */
     if (Target.Class === "Function") {
         var L = await Target.Get("length") - A.length;
         defineFinal(F, "length", Math.max(0, L));

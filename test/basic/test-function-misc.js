@@ -9,13 +9,33 @@ var x = { length: { valueOf: function() { return 1 } } };
 x[0] = 10;
 x[1] = 20;
 results.push(fn1.apply(null, x));
-/*
-try{
+
+try {
+    new parseInt();
 } catch (err) {
-    results.push(err instanceof ReferenceError);
+    results.push(err instanceof TypeError);
 }
-*/
+
+try {
+    new(parseInt.bind(null))();
+} catch (err) {
+    results.push(err instanceof TypeError);
+}
+
+try {
+    new(parseInt.bind(null).bind(null, 123))();
+} catch (err) {
+    results.push(err instanceof TypeError);
+}
+
+results.push(+new(String.bind(null, 123))());
+results.push(+new(String.bind(null).bind(null, 123))());
 
 throw [results, [
     'x10undefined',
+    true,
+    true,
+    true,
+    123,
+    123,
 ], "DONE"];
