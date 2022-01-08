@@ -31,6 +31,21 @@ try {
 results.push(+new(String.bind(null, 123))());
 results.push(+new(String.bind(null).bind(null, 123))());
 
+results.push((new String('123')) instanceof String.bind(null, '456'));
+results.push((new String('123')) instanceof String.bind(null).bind(null, '456'));
+
+try {
+    (new String('123')) instanceof parseInt.bind(null);
+} catch (err) {
+    results.push(err instanceof TypeError);
+}
+
+try {
+    (new String('123')) instanceof parseInt.bind(null).bind(null);
+} catch (err) {
+    results.push(err instanceof TypeError);
+}
+
 throw [results, [
     'x10undefined',
     true,
@@ -38,4 +53,8 @@ throw [results, [
     true,
     123,
     123,
+    true,
+    true,
+    true,
+    true,
 ], "DONE"];
