@@ -204,6 +204,7 @@ async function BindFunction_ClassConstruct(argumentsList) {
 async function BindFunction_HasInstance(V) {
     var F = this;
     var target = F.TargetFunction;
+    /* istanbul ignore if */
     if (target.HasInstance === undefined) throw VMTypeError();
     return await target.HasInstance(V);
 }

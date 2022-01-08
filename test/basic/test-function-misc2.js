@@ -32,6 +32,16 @@ try {
 
 results.push(desc.get.call(Math.sin));
 
+fn1.__proto__ = { caller: fn1 };
+results.push(fn1.caller === fn1);
+
+fn1.__proto__ = { caller: function() { 'use strict' } };
+try {
+    fn1.caller;
+} catch (err) {
+    results.push(err instanceof TypeError);
+}
+
 throw [results, [
     true,
     'function fn1(a){ return a + 1; }',
@@ -40,4 +50,6 @@ throw [results, [
     'function anonymous(a,b,c,d){ /*xxx*/ return a+b /***/ ; }',
     true,
     '',
+    true,
+    true,
 ], "DONE"];
