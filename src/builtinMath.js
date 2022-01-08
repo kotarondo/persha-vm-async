@@ -86,6 +86,8 @@ async function Math_log(thisValue, argumentsList) {
 
 async function Math_max(thisValue, argumentsList) {
     var result = -Infinity;
+    /* istanbul ignore next */
+    if ((stepsLimit -= argumentsList.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     for (var i = 0; i < argumentsList.length; i++) {
         var value = await ToNumber(argumentsList[i]);
         var result = Math.max(result, value);
@@ -95,6 +97,8 @@ async function Math_max(thisValue, argumentsList) {
 
 async function Math_min(thisValue, argumentsList) {
     var result = Infinity;
+    /* istanbul ignore next */
+    if ((stepsLimit -= argumentsList.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     for (var i = 0; i < argumentsList.length; i++) {
         var value = await ToNumber(argumentsList[i]);
         var result = Math.min(result, value);

@@ -325,10 +325,10 @@ async function JSON_stringify(thisValue, argumentsList) {
         } else if (replacer.Class === "Array") {
             var PropertyList = [];
             var length = await replacer.Get("length");
+            /* istanbul ignore next */
+            if ((stepsLimit -= 10 * length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             for (var i = 0; i < length; i++) {
-                /* istanbul ignore next */
-                if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
-                if (replacer.HasOwnProperty(i) === false) {
+                if (replacer.HasProperty(i) === false) {
                     continue;
                 }
                 var v = await replacer.Get(i);
