@@ -194,6 +194,7 @@ JSONParser = (function() {
                 proceed();
             }
         }
+        /* istanbul ignore if */
         if (startPos === currentPos) throw SyntaxError();
         return Number(source.substring(startPos, currentPos));
     }
@@ -244,6 +245,7 @@ JSONParser = (function() {
             count = 1;
         }
         for (var i = 0; i < count; i++) {
+            /* istanbul ignore if */
             if (current === undefined) throw SyntaxError();
             current = source[++currentPos];
         }
