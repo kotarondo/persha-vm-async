@@ -228,7 +228,7 @@ async function Array_prototype_reverse(thisValue, argumentsList) {
     var middle = Math.floor(len / 2);
     var lower = 0;
     while (lower !== middle) {
-        if ((stepsLimit -= 20) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+        if ((stepsLimit -= 50) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var upper = len - lower - 1;
         var upperP = upper;
         var lowerP = lower;
