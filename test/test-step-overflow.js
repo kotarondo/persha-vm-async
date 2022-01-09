@@ -35,7 +35,6 @@ async function test() {
     while (filenames.length) {
         var filename = filenames.pop()
         if (!/\.js$/.test(filename)) continue
-        console.log(filename)
         var source = fs.readFileSync(filename, 'utf8')
         var realm = await vm.createRealm()
         await test2(realm, source, filename)
