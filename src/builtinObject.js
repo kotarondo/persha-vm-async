@@ -275,16 +275,16 @@ async function set_Object_prototype___proto__(thisValue, argumentsList) {
     var proto = argumentsList[0];
     CheckObjectCoercible(thisValue);
     var O = thisValue;
-    if (proto !== null && Type(proto) !== TYPE_Object) return undefined;
-    if (Type(O) !== TYPE_Object) return undefined;
-    if (O.Extensible === false) throw VMTypeError();
+    if (proto !== null && Type(proto) !== TYPE_Object) return;
+    if (Type(O) !== TYPE_Object) return;
     var current = O.Prototype;
-    if (proto === current) return undefined;
+    if (proto === current) return;
+    if (O.Extensible === false) throw VMTypeError();
     var p = proto;
     while (p !== null) {
-        if (p === O) return undefined;
+        if (p === O) throw VMTypeError();
         p = p.Prototype;
     }
     O.Prototype = proto;
-    return undefined;
+    return;
 }
