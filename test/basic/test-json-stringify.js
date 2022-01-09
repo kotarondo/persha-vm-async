@@ -17,7 +17,7 @@ results.push(JSON.stringify({ a: 1 }, replacer));
 
 results.push(JSON.stringify({}, null, 4));
 results.push(JSON.stringify([], null, 4));
-results.push(JSON.stringify({a:undefined}, null, 4));
+results.push(JSON.stringify({ a: undefined }, null, 4));
 try {
     var a = [];
     a[0] = a;
@@ -31,8 +31,8 @@ throw [results, [
     '[[],{},"\\"\\\\"]',
     '{"a":1,"1":4,"b":2}',
     '{"a":1}',
-   '{}',
-   '[]',
-   '{}',
+    '{}',
+    '[]',
+    '{}',
     true,
 ], "DONE"];
