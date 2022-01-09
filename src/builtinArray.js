@@ -106,7 +106,7 @@ async function Array_prototype_toLocaleString(thisValue, argumentsList) {
     var ll = 0;
     while (k < len) {
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
-        if (ll > 1e6) throw new VMRangeError("too long result");
+        if (ll > 1e6) throw VMRangeError("Invalid string length");
         ll += separator.length;
         var nextElement = await array.Get(k);
         if (nextElement === undefined || nextElement === null) {
@@ -181,7 +181,7 @@ async function Array_prototype_join(thisValue, argumentsList) {
     var ll = 0;
     while (k < len) {
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
-        if (ll > 1e6) throw new VMRangeError("too long result");
+        if (ll > 1e6) throw VMRangeError("Invalid string length");
         ll += sep.length;
         var element = await O.Get(k);
         if (element === undefined || element === null) {

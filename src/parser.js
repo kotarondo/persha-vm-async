@@ -68,6 +68,7 @@ const Parser = (function() {
     var sourceObject;
     var code;
     var stack;
+    var scopes;
     var lastLeftHandSide;
     var lastReference;
     var lastIdentifierReference;
@@ -98,6 +99,7 @@ const Parser = (function() {
         sourceObject = NewSourceObject(type, parameterText, codeText, strictMode, filename);
         code = undefined;
         stack = undefined;
+        scopes = 0;
         lastLeftHandSide = undefined;
         lastReference = undefined;
         lastIdentifierReference = undefined;
@@ -163,7 +165,7 @@ const Parser = (function() {
     }
 
     function readCode(type, parameterText, codeText, strictMode, filename) {
-        if ((stepsLimit -= codeText.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+        if ((stepsLimit -= 5 * codeText.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         if (type === "global" || type === "eval") {
             setup(type, parameterText, codeText, strictMode, filename);
             code = Code(type);
@@ -195,454 +197,524 @@ const Parser = (function() {
             }
         }
         analyzeStaticEnv(code.varEnv);
+        assert(scopes === 0);
         return code;
     }
 
     function readFunctionBody(name, parameters, scope) {
-        var outerStrict = strict;
-        var outerCode = code;
-        var outerStack = stack;
-        var outerVarEnv = varEnv;
-        var outerLexEnv = lexEnv;
-        code = Code("function");
-        stack = Stack();
-        varEnv = Env("function", scope);
-        lexEnv = varEnv;
-        setIncluded(parameters, varEnv.defs);
-        setIncluded("arguments", varEnv.defs);
-        var body = code;
-        body.functionName = name;
-        body.parameters = parameters;
-        body.sourceElements = readSourceElements();
-        body.strict = strict;
-        body.evaluate = delayedFunctionBody;
-        body.varEnv = varEnv;
-        strict = outerStrict;
-        code = outerCode;
-        stack = outerStack;
-        varEnv = outerVarEnv;
-        lexEnv = outerLexEnv;
-        return body;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var outerStrict = strict;
+            var outerCode = code;
+            var outerStack = stack;
+            var outerVarEnv = varEnv;
+            var outerLexEnv = lexEnv;
+            code = Code("function");
+            stack = Stack();
+            varEnv = Env("function", scope);
+            lexEnv = varEnv;
+            setIncluded(parameters, varEnv.defs);
+            setIncluded("arguments", varEnv.defs);
+            var body = code;
+            body.functionName = name;
+            body.parameters = parameters;
+            body.sourceElements = readSourceElements();
+            body.strict = strict;
+            body.evaluate = delayedFunctionBody;
+            body.varEnv = varEnv;
+            strict = outerStrict;
+            code = outerCode;
+            stack = outerStack;
+            varEnv = outerVarEnv;
+            lexEnv = outerLexEnv;
+            return body;
+        } finally { scopes--; }
     }
 
     function readSourceElements() {
-        var pos = tokenPos;
-        while (isStringLiteral) {
-            if (!(isLineSeparatedBehind || current === ';' || current === '}')) {
-                break;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var pos = tokenPos;
+            while (isStringLiteral) {
+                if (!(isLineSeparatedBehind || current === ';' || current === '}')) {
+                    break;
+                }
+                if (value === "use strict") {
+                    var text = source.substring(tokenPos, tokenEndPos);
+                    if (text === '"use strict"' || text === "'use strict'") {
+                        strict = true;
+                    }
+                }
+                readStatement();
             }
-            if (value === "use strict") {
-                var text = source.substring(tokenPos, tokenEndPos);
-                if (text === '"use strict"' || text === "'use strict'") {
-                    strict = true;
+            if (pos !== tokenPos) {
+                setPosition(pos);
+                proceedToken();
+            }
+            var statements = [];
+            while (token !== undefined && token !== '}') {
+                if (token === "function") {
+                    code.functions.push(readFunctionDeclaration());
+                } else {
+                    statements.push(readStatement());
                 }
             }
-            readStatement();
-        }
-        if (pos !== tokenPos) {
-            setPosition(pos);
-            proceedToken();
-        }
-        var statements = [];
-        while (token !== undefined && token !== '}') {
-            if (token === "function") {
-                code.functions.push(readFunctionDeclaration());
-            } else {
-                statements.push(readStatement());
-            }
-        }
-        code.endPos = tokenPos;
-        return SourceElements(statements);
+            code.endPos = tokenPos;
+            return SourceElements(statements);
+        } finally { scopes--; }
     }
 
     function readFunctionDeclaration() {
-        proceedToken();
-        var name = expectingIdentifier();
-        expectingToken('(');
-        var parameters = [];
-        if (!testToken(')')) {
-            while (true) {
-                parameters.push(expectingIdentifier());
-                if (testToken(')')) {
-                    break;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            var name = expectingIdentifier();
+            expectingToken('(');
+            var parameters = [];
+            if (!testToken(')')) {
+                while (true) {
+                    parameters.push(expectingIdentifier());
+                    if (testToken(')')) {
+                        break;
+                    }
+                    expectingToken(',');
                 }
-                expectingToken(',');
             }
-        }
-        expectingToken('{');
-        setIncluded(name, varEnv.defs);
-        var body = readFunctionBody(name, parameters, varEnv);
-        expectingToken('}');
-        if (body.strict) {
-            disallowEvalOrArguments(name);
-            disallowDuplicated(parameters);
-            parameters.forEach(disallowEvalOrArguments);
-        }
-        var func = FunctionDeclaration(body);
-        return func;
+            expectingToken('{');
+            setIncluded(name, varEnv.defs);
+            var body = readFunctionBody(name, parameters, varEnv);
+            expectingToken('}');
+            if (body.strict) {
+                disallowEvalOrArguments(name);
+                disallowDuplicated(parameters);
+                parameters.forEach(disallowEvalOrArguments);
+            }
+            var func = FunctionDeclaration(body);
+            return func;
+        } finally { scopes--; }
     }
 
     function readStatement(labelset) {
-        switch (token) {
-            case '{': // '}'
-                return readBlockStatement();
-            case ';':
-                proceedToken();
-                return EmptyStatement();
-            case "var":
-                return readVariableStatement();
-            case "if":
-                return readIfStatement();
-            case "do":
-                stack.iterables++;
-                var statement = readDoWhileStatement(labelset);
-                stack.iterables--;
-                return statement;
-            case "while":
-                stack.iterables++;
-                var statement = readWhileStatement(labelset);
-                stack.iterables--;
-                return statement;
-            case "for":
-                stack.iterables++;
-                var statement = readForStatement(labelset);
-                stack.iterables--;
-                return statement;
-            case "continue":
-                return readContinueStatement();
-            case "break":
-                return readBreakStatement();
-            case "return":
-                return readReturnStatement();
-            case "with":
-                code.existsWithStatement = true;
-                return readWithStatement();
-            case "switch":
-                stack.switches++;
-                var statement = readSwitchStatement(labelset);
-                stack.switches--;
-                return statement;
-            case "throw":
-                return readThrowStatement();
-            case "try":
-                return readTryStatement();
-            case "debugger":
-                return readDebuggerStatement();
-            case "function":
-                return readFunctionStatement();
-            default:
-                if (isIdentifierName && current === ':') return readLabelledStatement();
-                else return readExpressionStatement();
-        }
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            switch (token) {
+                case '{': // '}'
+                    return readBlockStatement();
+                case ';':
+                    proceedToken();
+                    return EmptyStatement();
+                case "var":
+                    return readVariableStatement();
+                case "if":
+                    return readIfStatement();
+                case "do":
+                    stack.iterables++;
+                    var statement = readDoWhileStatement(labelset);
+                    stack.iterables--;
+                    return statement;
+                case "while":
+                    stack.iterables++;
+                    var statement = readWhileStatement(labelset);
+                    stack.iterables--;
+                    return statement;
+                case "for":
+                    stack.iterables++;
+                    var statement = readForStatement(labelset);
+                    stack.iterables--;
+                    return statement;
+                case "continue":
+                    return readContinueStatement();
+                case "break":
+                    return readBreakStatement();
+                case "return":
+                    return readReturnStatement();
+                case "with":
+                    code.existsWithStatement = true;
+                    return readWithStatement();
+                case "switch":
+                    stack.switches++;
+                    var statement = readSwitchStatement(labelset);
+                    stack.switches--;
+                    return statement;
+                case "throw":
+                    return readThrowStatement();
+                case "try":
+                    return readTryStatement();
+                case "debugger":
+                    return readDebuggerStatement();
+                case "function":
+                    return readFunctionStatement();
+                default:
+                    if (isIdentifierName && current === ':') return readLabelledStatement();
+                    else return readExpressionStatement();
+            }
+        } finally { scopes--; }
     }
 
     function readLabelledStatement() {
-        var labelset = [];
-        stack.labelStack.push(labelset);
-        while (isIdentifierName && current === ':') {
-            var identifier = expectingIdentifier();
-            if (findLabel(stack.labelStack, identifier) !== undefined) throw SyntaxError(prevTokenPos);
-            expectingToken(':');
-            labelset.push(identifier);
-        }
-        switch (token) {
-            case "do":
-            case "while":
-            case "for":
-                var iterable = true;
-        }
-        if (iterable) {
-            stack.iterableLabelStack.push(labelset);
-        }
-        var statement = readStatement(labelset);
-        stack.labelStack.pop();
-        if (iterable) {
-            stack.iterableLabelStack.pop();
-        }
-        var i = labelset.length;
-        while (i-- !== 0) {
-            statement = LabelledStatement(labelset[i], statement, iterable);
-        }
-        return statement;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var labelset = [];
+            stack.labelStack.push(labelset);
+            while (isIdentifierName && current === ':') {
+                var identifier = expectingIdentifier();
+                if (findLabel(stack.labelStack, identifier) !== undefined) throw SyntaxError(prevTokenPos);
+                expectingToken(':');
+                labelset.push(identifier);
+            }
+            switch (token) {
+                case "do":
+                case "while":
+                case "for":
+                    var iterable = true;
+            }
+            if (iterable) {
+                stack.iterableLabelStack.push(labelset);
+            }
+            var statement = readStatement(labelset);
+            stack.labelStack.pop();
+            if (iterable) {
+                stack.iterableLabelStack.pop();
+            }
+            var i = labelset.length;
+            while (i-- !== 0) {
+                statement = LabelledStatement(labelset[i], statement, iterable);
+            }
+            return statement;
+        } finally { scopes--; }
     }
 
     function readExpressionStatement() {
-        var pos = tokenPos;
-        var expression = readExpression();
-        expectingAutoSemicolon();
-        return ExpressionStatement(expression, pos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var pos = tokenPos;
+            var expression = readExpression();
+            expectingAutoSemicolon();
+            return ExpressionStatement(expression, pos);
+        } finally { scopes--; }
     }
 
     function readBlockStatement() {
-        expectingToken('{');
-        var statements = [];
-        while (true) {
-            if (testToken('}')) {
-                break;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            expectingToken('{');
+            var statements = [];
+            while (true) {
+                if (testToken('}')) {
+                    break;
+                }
+                statements.push(readStatement());
             }
-            statements.push(readStatement());
-        }
-        return BlockStatement(StatementList(statements));
+            return BlockStatement(StatementList(statements));
+        } finally { scopes--; }
     }
 
     function readVariableStatement() {
-        proceedToken();
-        var variableDeclarationList = readVariableDeclarationList();
-        expectingAutoSemicolon();
-        return VariableStatement(variableDeclarationList);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            var variableDeclarationList = readVariableDeclarationList();
+            expectingAutoSemicolon();
+            return VariableStatement(variableDeclarationList);
+        } finally { scopes--; }
     }
 
     function readVariableDeclarationList(isNoIn) {
-        var variableDeclarationList = [];
-        while (true) {
-            var variableDeclaration = readVariableDeclaration(isNoIn);
-            variableDeclarationList.push(variableDeclaration);
-            if (!testToken(',')) {
-                break;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var variableDeclarationList = [];
+            while (true) {
+                var variableDeclaration = readVariableDeclaration(isNoIn);
+                variableDeclarationList.push(variableDeclaration);
+                if (!testToken(',')) {
+                    break;
+                }
             }
-        }
-        return variableDeclarationList;
+            return variableDeclarationList;
+        } finally { scopes--; }
     }
 
     function readVariableDeclaration(isNoIn) {
-        var identifier = expectingIdentifier();
-        if (strict) {
-            disallowEvalOrArguments(identifier);
-        }
-        var pos = tokenPos;
-        if (testToken('=')) {
-            var initialiser = readAssignmentExpression(isNoIn);
-        }
-        setIncluded(identifier, code.variables);
-        setIncluded(identifier, varEnv.defs);
-        setIncluded(identifier, lexEnv.refs);
-        return VariableDeclaration(lexEnv, identifier, initialiser, strict, pos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var identifier = expectingIdentifier();
+            if (strict) {
+                disallowEvalOrArguments(identifier);
+            }
+            var pos = tokenPos;
+            if (testToken('=')) {
+                var initialiser = readAssignmentExpression(isNoIn);
+            }
+            setIncluded(identifier, code.variables);
+            setIncluded(identifier, varEnv.defs);
+            setIncluded(identifier, lexEnv.refs);
+            return VariableDeclaration(lexEnv, identifier, initialiser, strict, pos);
+        } finally { scopes--; }
     }
 
     function readIfStatement() {
-        proceedToken();
-        expectingToken('(');
-        var pos = tokenPos;
-        var expression = readExpression();
-        expectingToken(')');
-        var statement = readStatement();
-        if (testToken("else")) {
-            var elseStatement = readStatement();
-        }
-        return IfStatement(expression, statement, elseStatement, pos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            expectingToken('(');
+            var pos = tokenPos;
+            var expression = readExpression();
+            expectingToken(')');
+            var statement = readStatement();
+            if (testToken("else")) {
+                var elseStatement = readStatement();
+            }
+            return IfStatement(expression, statement, elseStatement, pos);
+        } finally { scopes--; }
     }
 
     function readDoWhileStatement(labelset) {
-        proceedToken();
-        var statement = readStatement();
-        expectingToken("while");
-        expectingToken('(');
-        var pos = tokenPos;
-        var expression = readExpression();
-        expectingToken(')');
-        expectingAutoSemicolon();
-        return DoWhileStatement(statement, expression, labelset, pos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            var statement = readStatement();
+            expectingToken("while");
+            expectingToken('(');
+            var pos = tokenPos;
+            var expression = readExpression();
+            expectingToken(')');
+            expectingAutoSemicolon();
+            return DoWhileStatement(statement, expression, labelset, pos);
+        } finally { scopes--; }
     }
 
     function readWhileStatement(labelset) {
-        proceedToken();
-        expectingToken('(');
-        var pos = tokenPos;
-        var expression = readExpression();
-        expectingToken(')');
-        var statement = readStatement();
-        return WhileStatement(expression, statement, labelset, pos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            expectingToken('(');
+            var pos = tokenPos;
+            var expression = readExpression();
+            expectingToken(')');
+            var statement = readStatement();
+            return WhileStatement(expression, statement, labelset, pos);
+        } finally { scopes--; }
     }
 
     function readForStatement(labelset) {
-        proceedToken();
-        expectingToken('(');
-        if (testToken("var")) {
-            var variableDeclarationList = readVariableDeclarationList(true); // NoIn
-            var pos1 = tokenPos;
-            if (testToken("in")) {
-                if (variableDeclarationList.length !== 1) throw SyntaxError(prevTokenPos);
-                var expression = readExpression();
-                var pos2 = tokenPos;
-                expectingToken(')');
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            expectingToken('(');
+            if (testToken("var")) {
+                var variableDeclarationList = readVariableDeclarationList(true); // NoIn
+                var pos1 = tokenPos;
+                if (testToken("in")) {
+                    if (variableDeclarationList.length !== 1) throw SyntaxError(prevTokenPos);
+                    var expression = readExpression();
+                    var pos2 = tokenPos;
+                    expectingToken(')');
+                    var statement = readStatement();
+                    return ForVarInStatement(variableDeclarationList[0], expression, statement, labelset, strict, pos1, pos2);
+                }
+                expectingToken(';');
+                if (!testToken(';')) {
+                    var pos1 = tokenPos;
+                    var testExpression = readExpression();
+                    expectingToken(';');
+                }
+                if (!testToken(')')) {
+                    var pos2 = tokenPos;
+                    var postExpression = readExpression();
+                    expectingToken(')');
+                }
                 var statement = readStatement();
-                return ForVarInStatement(variableDeclarationList[0], expression, statement, labelset, strict, pos1, pos2);
+                return ForVarStatement(variableDeclarationList, testExpression, postExpression, statement, labelset, pos1, pos2);
             }
-            expectingToken(';');
             if (!testToken(';')) {
                 var pos1 = tokenPos;
+                var expressionNoIn = readExpression(true); // NoIn
+                if (testToken("in")) {
+                    if (expressionNoIn !== lastLeftHandSide) throw SyntaxError(prevTokenPos);
+                    if (expressionNoIn !== lastReference) throw ReferenceError(prevTokenPos);
+                    if (strict && expressionNoIn === lastIdentifierReference) {
+                        disallowEvalOrArguments(lastIdentifier);
+                    }
+                    var pos2 = tokenPos;
+                    var expression = readExpression();
+                    expectingToken(')');
+                    var statement = readStatement();
+                    return ForInStatement(expressionNoIn, expression, statement, labelset, pos1, pos2);
+                }
+                expectingToken(';');
+            }
+            if (!testToken(';')) {
+                var pos2 = tokenPos;
                 var testExpression = readExpression();
                 expectingToken(';');
             }
             if (!testToken(')')) {
-                var pos2 = tokenPos;
+                var pos3 = tokenPos;
                 var postExpression = readExpression();
                 expectingToken(')');
             }
             var statement = readStatement();
-            return ForVarStatement(variableDeclarationList, testExpression, postExpression, statement, labelset, pos1, pos2);
-        }
-        if (!testToken(';')) {
-            var pos1 = tokenPos;
-            var expressionNoIn = readExpression(true); // NoIn
-            if (testToken("in")) {
-                if (expressionNoIn !== lastLeftHandSide) throw SyntaxError(prevTokenPos);
-                if (expressionNoIn !== lastReference) throw ReferenceError(prevTokenPos);
-                if (strict && expressionNoIn === lastIdentifierReference) {
-                    disallowEvalOrArguments(lastIdentifier);
-                }
-                var pos2 = tokenPos;
-                var expression = readExpression();
-                expectingToken(')');
-                var statement = readStatement();
-                return ForInStatement(expressionNoIn, expression, statement, labelset, pos1, pos2);
-            }
-            expectingToken(';');
-        }
-        if (!testToken(';')) {
-            var pos2 = tokenPos;
-            var testExpression = readExpression();
-            expectingToken(';');
-        }
-        if (!testToken(')')) {
-            var pos3 = tokenPos;
-            var postExpression = readExpression();
-            expectingToken(')');
-        }
-        var statement = readStatement();
-        return ForStatement(expressionNoIn, testExpression, postExpression, statement, labelset, pos1, pos2, pos3);
+            return ForStatement(expressionNoIn, testExpression, postExpression, statement, labelset, pos1, pos2, pos3);
+        } finally { scopes--; }
     }
 
     function readContinueStatement() {
-        proceedToken();
-        if (isIdentifierName && !isLineSeparatedAhead) {
-            var identifier = expectingIdentifier();
-            var labelset = findLabel(stack.iterableLabelStack, identifier);
-            if (labelset === undefined) throw SyntaxError(prevTokenPos);
-        } else if (stack.iterables === 0) throw SyntaxError(prevTokenPos);
-        expectingAutoSemicolon();
-        return ContinueStatement(identifier);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            if (isIdentifierName && !isLineSeparatedAhead) {
+                var identifier = expectingIdentifier();
+                var labelset = findLabel(stack.iterableLabelStack, identifier);
+                if (labelset === undefined) throw SyntaxError(prevTokenPos);
+            } else if (stack.iterables === 0) throw SyntaxError(prevTokenPos);
+            expectingAutoSemicolon();
+            return ContinueStatement(identifier);
+        } finally { scopes--; }
     }
 
     function readBreakStatement() {
-        proceedToken();
-        if (isIdentifierName && !isLineSeparatedAhead) {
-            var identifier = expectingIdentifier();
-            var labelset = findLabel(stack.labelStack, identifier);
-            if (labelset === undefined) throw SyntaxError(prevTokenPos);
-        } else if (stack.iterables === 0 && stack.switches === 0) throw SyntaxError(prevTokenPos);
-        expectingAutoSemicolon();
-        return BreakStatement(identifier);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            if (isIdentifierName && !isLineSeparatedAhead) {
+                var identifier = expectingIdentifier();
+                var labelset = findLabel(stack.labelStack, identifier);
+                if (labelset === undefined) throw SyntaxError(prevTokenPos);
+            } else if (stack.iterables === 0 && stack.switches === 0) throw SyntaxError(prevTokenPos);
+            expectingAutoSemicolon();
+            return BreakStatement(identifier);
+        } finally { scopes--; }
     }
 
     function readReturnStatement() {
-        proceedToken();
-        if (code.type !== "function") throw SyntaxError(prevTokenPos);
-        if (!(isLineSeparatedAhead || token === ';' || token === '}')) {
-            var pos = tokenPos;
-            var expression = readExpression();
-        }
-        expectingAutoSemicolon();
-        return ReturnStatement(expression, pos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            if (code.type !== "function") throw SyntaxError(prevTokenPos);
+            if (!(isLineSeparatedAhead || token === ';' || token === '}')) {
+                var pos = tokenPos;
+                var expression = readExpression();
+            }
+            expectingAutoSemicolon();
+            return ReturnStatement(expression, pos);
+        } finally { scopes--; }
     }
 
     function readWithStatement() {
-        proceedToken();
-        if (strict) throw SyntaxError(prevTokenPos);
-        expectingToken('(');
-        var pos = tokenPos;
-        var expression = readExpression();
-        expectingToken(')');
-        var outerLexEnv = lexEnv;
-        lexEnv = Env("with", lexEnv);
-        var statement = readStatement();
-        lexEnv = outerLexEnv;
-        return WithStatement(expression, statement, pos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            if (strict) throw SyntaxError(prevTokenPos);
+            expectingToken('(');
+            var pos = tokenPos;
+            var expression = readExpression();
+            expectingToken(')');
+            var outerLexEnv = lexEnv;
+            lexEnv = Env("with", lexEnv);
+            var statement = readStatement();
+            lexEnv = outerLexEnv;
+            return WithStatement(expression, statement, pos);
+        } finally { scopes--; }
     }
 
     function readSwitchStatement(labelset) {
-        proceedToken();
-        expectingToken('(');
-        var pos1 = tokenPos;
-        var expression = readExpression();
-        expectingToken(')');
-        var firstClauses = [];
-        var secondClauses = [];
-        expectingToken('{');
-        while (!testToken('}')) {
-            if (testToken("default")) {
-                if (defaultClause !== undefined) throw SyntaxError(prevTokenPos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            expectingToken('(');
+            var pos1 = tokenPos;
+            var expression = readExpression();
+            expectingToken(')');
+            var firstClauses = [];
+            var secondClauses = [];
+            expectingToken('{');
+            while (!testToken('}')) {
+                if (testToken("default")) {
+                    if (defaultClause !== undefined) throw SyntaxError(prevTokenPos);
+                    expectingToken(':');
+                    var statements = [];
+                    while (token !== '}' && token !== "case" && token !== "default") {
+                        statements.push(readStatement());
+                    }
+                    var defaultClause = StatementList(statements);
+                    continue;
+                }
+                expectingToken("case");
+                var pos2 = tokenPos;
+                var caseExpression = readExpression();
                 expectingToken(':');
                 var statements = [];
                 while (token !== '}' && token !== "case" && token !== "default") {
                     statements.push(readStatement());
                 }
-                var defaultClause = StatementList(statements);
-                continue;
+                var clause = CaseClause(caseExpression, StatementList(statements), pos2);
+                if (defaultClause === undefined) {
+                    firstClauses.push(clause);
+                } else {
+                    secondClauses.push(clause);
+                }
             }
-            expectingToken("case");
-            var pos2 = tokenPos;
-            var caseExpression = readExpression();
-            expectingToken(':');
-            var statements = [];
-            while (token !== '}' && token !== "case" && token !== "default") {
-                statements.push(readStatement());
-            }
-            var clause = CaseClause(caseExpression, StatementList(statements), pos2);
-            if (defaultClause === undefined) {
-                firstClauses.push(clause);
-            } else {
-                secondClauses.push(clause);
-            }
-        }
-        return SwitchStatement(expression, CaseBlock(firstClauses, defaultClause, secondClauses), labelset, pos1);
+            return SwitchStatement(expression, CaseBlock(firstClauses, defaultClause, secondClauses), labelset, pos1);
+        } finally { scopes--; }
     }
 
     function readThrowStatement() {
-        proceedToken();
-        if (isLineSeparatedAhead) throw SyntaxError(prevTokenPos);
-        var pos = tokenPos;
-        var expression = readExpression();
-        expectingAutoSemicolon();
-        return ThrowStatement(expression, pos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            if (isLineSeparatedAhead) throw SyntaxError(prevTokenPos);
+            var pos = tokenPos;
+            var expression = readExpression();
+            expectingAutoSemicolon();
+            return ThrowStatement(expression, pos);
+        } finally { scopes--; }
     }
 
     function readTryStatement() {
-        proceedToken();
-        var block = readBlockStatement();
-        if (testToken("catch")) {
-            expectingToken('(');
-            var identifier = expectingIdentifier();
-            if (strict) {
-                disallowEvalOrArguments(identifier);
-            }
-            expectingToken(')');
-            var outerLexEnv = lexEnv;
-            lexEnv = Env("catch", lexEnv);
-            setIncluded(identifier, lexEnv.defs);
-            var catchBlock = CatchBlock(lexEnv, identifier, readBlockStatement());
-            lexEnv = outerLexEnv;
-            if (testToken("finally")) {
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            var block = readBlockStatement();
+            if (testToken("catch")) {
+                expectingToken('(');
+                var identifier = expectingIdentifier();
+                if (strict) {
+                    disallowEvalOrArguments(identifier);
+                }
+                expectingToken(')');
+                var outerLexEnv = lexEnv;
+                lexEnv = Env("catch", lexEnv);
+                setIncluded(identifier, lexEnv.defs);
+                var catchBlock = CatchBlock(lexEnv, identifier, readBlockStatement());
+                lexEnv = outerLexEnv;
+                if (testToken("finally")) {
+                    var finallyBlock = readBlockStatement();
+                }
+            } else {
+                expectingToken("finally");
                 var finallyBlock = readBlockStatement();
             }
-        } else {
-            expectingToken("finally");
-            var finallyBlock = readBlockStatement();
-        }
-        return TryStatement(block, catchBlock, finallyBlock);
+            return TryStatement(block, catchBlock, finallyBlock);
+        } finally { scopes--; }
     }
 
     function readDebuggerStatement() {
-        var pos = tokenPos;
-        proceedToken();
-        expectingAutoSemicolon();
-        return DebuggerStatement(pos);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var pos = tokenPos;
+            proceedToken();
+            expectingAutoSemicolon();
+            return DebuggerStatement(pos);
+        } finally { scopes--; }
     }
 
     function readFunctionStatement() {
-        if (strict) throw SyntaxError(tokenPos);
-        code.functions.push(readFunctionDeclaration());
-        return EmptyStatement();
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            if (strict) throw SyntaxError(tokenPos);
+            code.functions.push(readFunctionDeclaration());
+            return EmptyStatement();
+        } finally { scopes--; }
     }
 
     function findLabel(labelStack, identifier) {
@@ -655,131 +727,143 @@ const Parser = (function() {
     }
 
     function readExpression(isNoIn) {
-        var expression = readAssignmentExpression(isNoIn);
-        while (testToken(',')) {
-            var rightExpression = readAssignmentExpression(isNoIn);
-            expression = CommaOperator(expression, rightExpression);
-        }
-        return expression;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var expression = readAssignmentExpression(isNoIn);
+            while (testToken(',')) {
+                var rightExpression = readAssignmentExpression(isNoIn);
+                expression = CommaOperator(expression, rightExpression);
+            }
+            return expression;
+        } finally { scopes--; }
     }
 
     function readAssignmentExpression(isNoIn) {
-        var expression = readConditionalExpression(isNoIn);
-        var operator = token;
-        switch (operator) {
-            case '=':
-            case '*=':
-            case '/=':
-            case '%=':
-            case '+=':
-            case '-=':
-            case '<<=':
-            case '>>=':
-            case '>>>=':
-            case '&=':
-            case '|=':
-            case '^=':
-                proceedToken();
-                if (expression !== lastLeftHandSide) throw SyntaxError(prevTokenPos);
-                if (expression !== lastReference) throw ReferenceError(prevTokenPos);
-                if (strict && expression === lastIdentifierReference) {
-                    disallowEvalOrArguments(lastIdentifier);
-                }
-                var rightExpression = readAssignmentExpression(isNoIn);
-                if (operator === '=') return SimpleAssignment(expression, rightExpression);
-                else return CompoundAssignment(operator, expression, rightExpression);
-        }
-        return expression;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var expression = readConditionalExpression(isNoIn);
+            var operator = token;
+            switch (operator) {
+                case '=':
+                case '*=':
+                case '/=':
+                case '%=':
+                case '+=':
+                case '-=':
+                case '<<=':
+                case '>>=':
+                case '>>>=':
+                case '&=':
+                case '|=':
+                case '^=':
+                    proceedToken();
+                    if (expression !== lastLeftHandSide) throw SyntaxError(prevTokenPos);
+                    if (expression !== lastReference) throw ReferenceError(prevTokenPos);
+                    if (strict && expression === lastIdentifierReference) {
+                        disallowEvalOrArguments(lastIdentifier);
+                    }
+                    var rightExpression = readAssignmentExpression(isNoIn);
+                    if (operator === '=') return SimpleAssignment(expression, rightExpression);
+                    else return CompoundAssignment(operator, expression, rightExpression);
+            }
+            return expression;
+        } finally { scopes--; }
     }
 
     function readConditionalExpression(isNoIn) {
-        var expression = readBinaryExpression('', isNoIn);
-        if (testToken('?')) {
-            var firstExpression = readAssignmentExpression();
-            expectingToken(':');
-            var secondExpression = readAssignmentExpression(isNoIn);
-            return ConditionalOperator(expression, firstExpression, secondExpression);
-        }
-        return expression;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var expression = readBinaryExpression('', isNoIn);
+            if (testToken('?')) {
+                var firstExpression = readAssignmentExpression();
+                expectingToken(':');
+                var secondExpression = readAssignmentExpression(isNoIn);
+                return ConditionalOperator(expression, firstExpression, secondExpression);
+            }
+            return expression;
+        } finally { scopes--; }
     }
 
     function readBinaryExpression(leadingOperator, isNoIn) {
-        var expression = readUnaryExpression();
-        while (true) {
-            var operator = token;
-            if (isNoIn && operator === "in") {
-                break;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var expression = readUnaryExpression();
+            while (true) {
+                var operator = token;
+                if (isNoIn && operator === "in") {
+                    break;
+                }
+                if (getOperatorPriority(leadingOperator) <= getOperatorPriority(operator)) {
+                    break;
+                }
+                proceedToken();
+                var rightExpression = readBinaryExpression(operator, isNoIn);
+                switch (operator) {
+                    case '*':
+                    case '/':
+                    case '%':
+                        expression = MultiplicativeOperator(operator, expression, rightExpression);
+                        break;
+                    case '+':
+                        expression = AdditionOperator(expression, rightExpression);
+                        break;
+                    case '-':
+                        expression = SubtractionOperator(expression, rightExpression);
+                        break;
+                    case '<<':
+                        expression = LeftShiftOperator(expression, rightExpression);
+                        break;
+                    case '>>':
+                        expression = SignedRightShiftOperator(expression, rightExpression);
+                        break;
+                    case '>>>':
+                        expression = UnsignedRightShiftOperator(expression, rightExpression);
+                        break;
+                    case '<':
+                        expression = LessThanOperator(expression, rightExpression);
+                        break;
+                    case '>':
+                        expression = GreaterThanOperator(expression, rightExpression);
+                        break;
+                    case '<=':
+                        expression = LessThanOrEqualOperator(expression, rightExpression);
+                        break;
+                    case '>=':
+                        expression = GreaterThanOrEqualOperator(expression, rightExpression);
+                        break;
+                    case "instanceof":
+                        expression = instanceofOperator(expression, rightExpression);
+                        break;
+                    case "in":
+                        expression = inOperator(expression, rightExpression);
+                        break;
+                    case '==':
+                        expression = EqualsOperator(expression, rightExpression);
+                        break;
+                    case '!=':
+                        expression = DoesNotEqualOperator(expression, rightExpression);
+                        break;
+                    case '===':
+                        expression = StrictEqualsOperator(expression, rightExpression);
+                        break;
+                    case '!==':
+                        expression = StrictDoesNotEqualOperator(expression, rightExpression);
+                        break;
+                    case '&':
+                    case '^':
+                    case '|':
+                        expression = BinaryBitwiseOperator(operator, expression, rightExpression);
+                        break;
+                    case '&&':
+                        expression = LogicalAndOperator(expression, rightExpression);
+                        break;
+                    case '||':
+                        expression = LogicalOrOperator(expression, rightExpression);
+                        break;
+                }
             }
-            if (getOperatorPriority(leadingOperator) <= getOperatorPriority(operator)) {
-                break;
-            }
-            proceedToken();
-            var rightExpression = readBinaryExpression(operator, isNoIn);
-            switch (operator) {
-                case '*':
-                case '/':
-                case '%':
-                    expression = MultiplicativeOperator(operator, expression, rightExpression);
-                    break;
-                case '+':
-                    expression = AdditionOperator(expression, rightExpression);
-                    break;
-                case '-':
-                    expression = SubtractionOperator(expression, rightExpression);
-                    break;
-                case '<<':
-                    expression = LeftShiftOperator(expression, rightExpression);
-                    break;
-                case '>>':
-                    expression = SignedRightShiftOperator(expression, rightExpression);
-                    break;
-                case '>>>':
-                    expression = UnsignedRightShiftOperator(expression, rightExpression);
-                    break;
-                case '<':
-                    expression = LessThanOperator(expression, rightExpression);
-                    break;
-                case '>':
-                    expression = GreaterThanOperator(expression, rightExpression);
-                    break;
-                case '<=':
-                    expression = LessThanOrEqualOperator(expression, rightExpression);
-                    break;
-                case '>=':
-                    expression = GreaterThanOrEqualOperator(expression, rightExpression);
-                    break;
-                case "instanceof":
-                    expression = instanceofOperator(expression, rightExpression);
-                    break;
-                case "in":
-                    expression = inOperator(expression, rightExpression);
-                    break;
-                case '==':
-                    expression = EqualsOperator(expression, rightExpression);
-                    break;
-                case '!=':
-                    expression = DoesNotEqualOperator(expression, rightExpression);
-                    break;
-                case '===':
-                    expression = StrictEqualsOperator(expression, rightExpression);
-                    break;
-                case '!==':
-                    expression = StrictDoesNotEqualOperator(expression, rightExpression);
-                    break;
-                case '&':
-                case '^':
-                case '|':
-                    expression = BinaryBitwiseOperator(operator, expression, rightExpression);
-                    break;
-                case '&&':
-                    expression = LogicalAndOperator(expression, rightExpression);
-                    break;
-                case '||':
-                    expression = LogicalOrOperator(expression, rightExpression);
-                    break;
-            }
-        }
-        return expression;
+            return expression;
+        } finally { scopes--; }
     }
 
     function getOperatorPriority(operator) {
@@ -822,290 +906,308 @@ const Parser = (function() {
     }
 
     function readUnaryExpression() {
-        var operator = token;
-        switch (operator) {
-            case "delete":
-                proceedToken();
-                var expression = readUnaryExpression();
-                if (strict && expression === lastIdentifierReference) throw SyntaxError(prevTokenPos);
-                return deleteOperator(expression);
-            case "void":
-                proceedToken();
-                var expression = readUnaryExpression();
-                return voidOperator(expression);
-            case "typeof":
-                proceedToken();
-                var expression = readUnaryExpression();
-                return typeofOperator(expression);
-            case '++':
-                proceedToken();
-                var expression = readUnaryExpression();
-                if (strict && expression === lastIdentifierReference) {
-                    disallowEvalOrArguments(lastIdentifier);
-                }
-                if (expression !== lastReference) throw ReferenceError(prevTokenPos);
-                return PrefixIncrementOperator(expression);
-            case '--':
-                proceedToken();
-                var expression = readUnaryExpression();
-                if (strict && expression === lastIdentifierReference) {
-                    disallowEvalOrArguments(lastIdentifier);
-                }
-                if (expression !== lastReference) throw ReferenceError(prevTokenPos);
-                return PrefixDecrementOperator(expression);
-            case '+':
-                proceedToken();
-                var expression = readUnaryExpression();
-                return PlusOperator(expression);
-            case '-':
-                proceedToken();
-                var expression = readUnaryExpression();
-                return MinusOperator(expression);
-            case '~':
-                proceedToken();
-                var expression = readUnaryExpression();
-                return BitwiseNOTOperator(expression);
-            case '!':
-                proceedToken();
-                var expression = readUnaryExpression();
-                return LogicalNOTOperator(expression);
-        }
-        var expression = readLeftHandSideExpression();
-        if (isLineSeparatedAhead) return expression;
-        var operator = token;
-        switch (operator) {
-            case '++':
-                if (strict && expression === lastIdentifierReference) {
-                    disallowEvalOrArguments(lastIdentifier);
-                }
-                if (expression !== lastReference) throw ReferenceError(tokenPos);
-                proceedToken();
-                return PostfixIncrementOperator(expression);
-            case '--':
-                if (strict && expression === lastIdentifierReference) {
-                    disallowEvalOrArguments(lastIdentifier);
-                }
-                if (expression !== lastReference) throw ReferenceError(tokenPos);
-                proceedToken();
-                return PostfixDecrementOperator(expression);
-        }
-        return expression;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var operator = token;
+            switch (operator) {
+                case "delete":
+                    proceedToken();
+                    var expression = readUnaryExpression();
+                    if (strict && expression === lastIdentifierReference) throw SyntaxError(prevTokenPos);
+                    return deleteOperator(expression);
+                case "void":
+                    proceedToken();
+                    var expression = readUnaryExpression();
+                    return voidOperator(expression);
+                case "typeof":
+                    proceedToken();
+                    var expression = readUnaryExpression();
+                    return typeofOperator(expression);
+                case '++':
+                    proceedToken();
+                    var expression = readUnaryExpression();
+                    if (strict && expression === lastIdentifierReference) {
+                        disallowEvalOrArguments(lastIdentifier);
+                    }
+                    if (expression !== lastReference) throw ReferenceError(prevTokenPos);
+                    return PrefixIncrementOperator(expression);
+                case '--':
+                    proceedToken();
+                    var expression = readUnaryExpression();
+                    if (strict && expression === lastIdentifierReference) {
+                        disallowEvalOrArguments(lastIdentifier);
+                    }
+                    if (expression !== lastReference) throw ReferenceError(prevTokenPos);
+                    return PrefixDecrementOperator(expression);
+                case '+':
+                    proceedToken();
+                    var expression = readUnaryExpression();
+                    return PlusOperator(expression);
+                case '-':
+                    proceedToken();
+                    var expression = readUnaryExpression();
+                    return MinusOperator(expression);
+                case '~':
+                    proceedToken();
+                    var expression = readUnaryExpression();
+                    return BitwiseNOTOperator(expression);
+                case '!':
+                    proceedToken();
+                    var expression = readUnaryExpression();
+                    return LogicalNOTOperator(expression);
+            }
+            var expression = readLeftHandSideExpression();
+            if (isLineSeparatedAhead) return expression;
+            var operator = token;
+            switch (operator) {
+                case '++':
+                    if (strict && expression === lastIdentifierReference) {
+                        disallowEvalOrArguments(lastIdentifier);
+                    }
+                    if (expression !== lastReference) throw ReferenceError(tokenPos);
+                    proceedToken();
+                    return PostfixIncrementOperator(expression);
+                case '--':
+                    if (strict && expression === lastIdentifierReference) {
+                        disallowEvalOrArguments(lastIdentifier);
+                    }
+                    if (expression !== lastReference) throw ReferenceError(tokenPos);
+                    proceedToken();
+                    return PostfixDecrementOperator(expression);
+            }
+            return expression;
+        } finally { scopes--; }
     }
 
     function readLeftHandSideExpression() {
-        var newOperators = 0;
-        while (testToken("new")) {
-            newOperators++;
-        }
-        if (token === "function") {
-            var expression = readFunctionExpression();
-        } else {
-            var expression = readPrimaryExpression();
-        }
-        while (true) {
-            switch (token) {
-                case '[':
-                    proceedToken();
-                    var indexExpression = readExpression();
-                    expectingToken(']');
-                    expression = PropertyAccessor(expression, indexExpression, strict);
-                    lastReference = expression;
-                    continue;
-                case '.':
-                    proceedToken();
-                    var name = expectingIdentifierName();
-                    expression = PropertyAccessor(expression, Literal(name), strict);
-                    lastReference = expression;
-                    continue;
-                case '(':
-                    if (expression === lastIdentifierReference && lastIdentifier === "eval" && newOperators === 0) {
-                        code.existsDirectEval = true;
-                        lexEnv.existsDirectEval = true;
-                    }
-                    var args = readArguments();
-                    if (newOperators !== 0) {
-                        newOperators--;
-                        expression = NewOperator(expression, args);
-                    } else {
-                        expression = FunctionCall(expression, args, strict);
-                    }
-                    continue;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var newOperators = 0;
+            while (testToken("new")) {
+                newOperators++;
             }
-            break;
-        }
-        while (newOperators-- !== 0) {
-            expression = NewOperator(expression, []);
-        }
-        lastLeftHandSide = expression;
-        return expression;
+            if (token === "function") {
+                var expression = readFunctionExpression();
+            } else {
+                var expression = readPrimaryExpression();
+            }
+            while (true) {
+                switch (token) {
+                    case '[':
+                        proceedToken();
+                        var indexExpression = readExpression();
+                        expectingToken(']');
+                        expression = PropertyAccessor(expression, indexExpression, strict);
+                        lastReference = expression;
+                        continue;
+                    case '.':
+                        proceedToken();
+                        var name = expectingIdentifierName();
+                        expression = PropertyAccessor(expression, Literal(name), strict);
+                        lastReference = expression;
+                        continue;
+                    case '(':
+                        if (expression === lastIdentifierReference && lastIdentifier === "eval" && newOperators === 0) {
+                            code.existsDirectEval = true;
+                            lexEnv.existsDirectEval = true;
+                        }
+                        var args = readArguments();
+                        if (newOperators !== 0) {
+                            newOperators--;
+                            expression = NewOperator(expression, args);
+                        } else {
+                            expression = FunctionCall(expression, args, strict);
+                        }
+                        continue;
+                }
+                break;
+            }
+            while (newOperators-- !== 0) {
+                expression = NewOperator(expression, []);
+            }
+            lastLeftHandSide = expression;
+            return expression;
+        } finally { scopes--; }
     }
 
     function readArguments() {
-        var args = [];
-        proceedToken();
-        if (!testToken(')')) {
-            while (true) {
-                args.push(readAssignmentExpression());
-                if (testToken(')')) {
-                    break;
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var args = [];
+            proceedToken();
+            if (!testToken(')')) {
+                while (true) {
+                    args.push(readAssignmentExpression());
+                    if (testToken(')')) {
+                        break;
+                    }
+                    expectingToken(',');
                 }
-                expectingToken(',');
             }
-        }
-        return args;
+            return args;
+        } finally { scopes--; }
     }
 
     function readFunctionExpression() {
-        proceedToken();
-        if (!testToken('(')) {
-            var name = expectingIdentifier();
-            expectingToken('(');
-        }
-        var parameters = [];
-        if (!testToken(')')) {
-            while (true) {
-                parameters.push(expectingIdentifier());
-                if (testToken(')')) {
-                    break;
-                }
-                expectingToken(',');
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            proceedToken();
+            if (!testToken('(')) {
+                var name = expectingIdentifier();
+                expectingToken('(');
             }
-        }
-        expectingToken('{');
-        var outerLexEnv = lexEnv;
-        if (name) {
-            lexEnv = Env("named-function", lexEnv);
-            setIncluded(name, lexEnv.defs);
-        }
-        var body = readFunctionBody(name, parameters, lexEnv);
-        var expression = FunctionExpression(lexEnv, body);
-        lexEnv = outerLexEnv;
-        expectingToken('}');
-        if (body.strict) {
-            disallowEvalOrArguments(name);
-            disallowDuplicated(parameters);
-            parameters.forEach(disallowEvalOrArguments);
-        }
-        return expression;
+            var parameters = [];
+            if (!testToken(')')) {
+                while (true) {
+                    parameters.push(expectingIdentifier());
+                    if (testToken(')')) {
+                        break;
+                    }
+                    expectingToken(',');
+                }
+            }
+            expectingToken('{');
+            var outerLexEnv = lexEnv;
+            if (name) {
+                lexEnv = Env("named-function", lexEnv);
+                setIncluded(name, lexEnv.defs);
+            }
+            var body = readFunctionBody(name, parameters, lexEnv);
+            var expression = FunctionExpression(lexEnv, body);
+            lexEnv = outerLexEnv;
+            expectingToken('}');
+            if (body.strict) {
+                disallowEvalOrArguments(name);
+                disallowDuplicated(parameters);
+                parameters.forEach(disallowEvalOrArguments);
+            }
+            return expression;
+        } finally { scopes--; }
     }
 
     function readPrimaryExpression() {
-        if (isNumericLiteral || isStringLiteral) {
-            var expression = Literal(value);
-            proceedToken();
-            return expression;
-        }
-        if (isIdentifierName && !isReservedWord(token)) {
-            var identifier = proceedToken();
-            var expression = IdentifierReference(lexEnv, identifier, strict);
-            lastIdentifierReference = expression;
-            lastIdentifier = identifier;
-            lastReference = expression;
-            if (identifier === "arguments") {
-                code.existsArgumentsRef = true;
-            }
-            setIncluded(identifier, lexEnv.refs);
-            return expression;
-        }
-        if (token === '/' || token === '/=') {
-            setPosition(tokenPos);
-            value = readRegExpLiteral();
-            skipSpaces();
-            proceedToken();
-            return RegExpLiteral(value);
-        }
-        switch (proceedToken()) {
-            case "this":
-                return ThisExpression();
-            case "null":
-                return Literal(null);
-            case "false":
-                return Literal(false);
-            case "true":
-                return Literal(true);
-            case '[':
-                var elements = [];
-                while (true) {
-                    while (testToken(',')) {
-                        elements.push(empty);
-                    }
-                    if (testToken(']')) {
-                        elements.push(empty);
-                        break;
-                    }
-                    elements.push(readAssignmentExpression());
-                    if (testToken(']')) {
-                        break;
-                    }
-                    expectingToken(',');
-                }
-                return ArrayInitialiser(elements);
-            case '{':
-                var elements = [];
-                var previous = ({
-                    data: [],
-                    get: [],
-                    set: [],
-                });
-                while (true) {
-                    if (testToken('}')) {
-                        break;
-                    }
-                    elements.push(readPropertyAssignment(previous));
-                    if (testToken('}')) {
-                        break;
-                    }
-                    expectingToken(',');
-                }
-                return ObjectInitialiser(elements);
-            case '(':
-                var expression = readExpression();
-                expectingToken(')');
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            if (isNumericLiteral || isStringLiteral) {
+                var expression = Literal(value);
+                proceedToken();
                 return expression;
-        }
-        throw SyntaxError(prevTokenPos);
+            }
+            if (isIdentifierName && !isReservedWord(token)) {
+                var identifier = proceedToken();
+                var expression = IdentifierReference(lexEnv, identifier, strict);
+                lastIdentifierReference = expression;
+                lastIdentifier = identifier;
+                lastReference = expression;
+                if (identifier === "arguments") {
+                    code.existsArgumentsRef = true;
+                }
+                setIncluded(identifier, lexEnv.refs);
+                return expression;
+            }
+            if (token === '/' || token === '/=') {
+                setPosition(tokenPos);
+                value = readRegExpLiteral();
+                skipSpaces();
+                proceedToken();
+                return RegExpLiteral(value);
+            }
+            switch (proceedToken()) {
+                case "this":
+                    return ThisExpression();
+                case "null":
+                    return Literal(null);
+                case "false":
+                    return Literal(false);
+                case "true":
+                    return Literal(true);
+                case '[':
+                    var elements = [];
+                    while (true) {
+                        while (testToken(',')) {
+                            elements.push(empty);
+                        }
+                        if (testToken(']')) {
+                            elements.push(empty);
+                            break;
+                        }
+                        elements.push(readAssignmentExpression());
+                        if (testToken(']')) {
+                            break;
+                        }
+                        expectingToken(',');
+                    }
+                    return ArrayInitialiser(elements);
+                case '{':
+                    var elements = [];
+                    var previous = ({
+                        data: [],
+                        get: [],
+                        set: [],
+                    });
+                    while (true) {
+                        if (testToken('}')) {
+                            break;
+                        }
+                        elements.push(readPropertyAssignment(previous));
+                        if (testToken('}')) {
+                            break;
+                        }
+                        expectingToken(',');
+                    }
+                    return ObjectInitialiser(elements);
+                case '(':
+                    var expression = readExpression();
+                    expectingToken(')');
+                    return expression;
+            }
+            throw SyntaxError(prevTokenPos);
+        } finally { scopes--; }
     }
 
     function readPropertyAssignment(previous) {
-        var name = expectingPropertyName();
-        if (token === ':') {
-            if (strict && isIncluded(name, previous.data)) throw SyntaxError(prevTokenPos);
-            if (isIncluded(name, previous.get)) throw SyntaxError(prevTokenPos);
-            if (isIncluded(name, previous.set)) throw SyntaxError(prevTokenPos);
-            previous.data.push(name);
-            proceedToken();
-            var expression = readAssignmentExpression();
-            var a = PropertyAssignment(name, expression);
-        } else if (name === "get") {
-            name = expectingPropertyName();
-            if (isIncluded(name, previous.data)) throw SyntaxError(prevTokenPos);
-            if (isIncluded(name, previous.get)) throw SyntaxError(prevTokenPos);
-            previous.get.push(name);
-            expectingToken('(');
-            expectingToken(')');
-            expectingToken('{');
-            var body = readFunctionBody("get_" + name, [], lexEnv);
-            expectingToken('}');
-            var a = PropertyAssignmentGet(name, body);
-        } else if (name === "set") {
-            name = expectingPropertyName();
-            if (isIncluded(name, previous.data)) throw SyntaxError(prevTokenPos);
-            if (isIncluded(name, previous.set)) throw SyntaxError(prevTokenPos);
-            previous.set.push(name);
-            expectingToken('(');
-            var identifier = expectingIdentifier();
-            expectingToken(')');
-            expectingToken('{');
-            var body = readFunctionBody("set_" + name, [identifier], lexEnv);
-            expectingToken('}');
-            if (body.strict) {
-                disallowEvalOrArguments(identifier);
+        try {
+            if (++scopes > 400) throw SyntaxError(-1);
+            var name = expectingPropertyName();
+            if (token === ':') {
+                if (strict && isIncluded(name, previous.data)) throw SyntaxError(prevTokenPos);
+                if (isIncluded(name, previous.get)) throw SyntaxError(prevTokenPos);
+                if (isIncluded(name, previous.set)) throw SyntaxError(prevTokenPos);
+                previous.data.push(name);
+                proceedToken();
+                var expression = readAssignmentExpression();
+                var a = PropertyAssignment(name, expression);
+            } else if (name === "get") {
+                name = expectingPropertyName();
+                if (isIncluded(name, previous.data)) throw SyntaxError(prevTokenPos);
+                if (isIncluded(name, previous.get)) throw SyntaxError(prevTokenPos);
+                previous.get.push(name);
+                expectingToken('(');
+                expectingToken(')');
+                expectingToken('{');
+                var body = readFunctionBody("get_" + name, [], lexEnv);
+                expectingToken('}');
+                var a = PropertyAssignmentGet(name, body);
+            } else if (name === "set") {
+                name = expectingPropertyName();
+                if (isIncluded(name, previous.data)) throw SyntaxError(prevTokenPos);
+                if (isIncluded(name, previous.set)) throw SyntaxError(prevTokenPos);
+                previous.set.push(name);
+                expectingToken('(');
+                var identifier = expectingIdentifier();
+                expectingToken(')');
+                expectingToken('{');
+                var body = readFunctionBody("set_" + name, [identifier], lexEnv);
+                expectingToken('}');
+                if (body.strict) {
+                    disallowEvalOrArguments(identifier);
+                }
+                var a = PropertyAssignmentSet(name, body);
+            } else {
+                expectingToken(':');
             }
-            var a = PropertyAssignmentSet(name, body);
-        } else {
-            expectingToken(':');
-        }
-        return a;
+            return a;
+        } finally { scopes--; }
     }
 
     function disallowDuplicated(parameters) {
@@ -1692,11 +1794,15 @@ const Parser = (function() {
             pos = currentPos;
         }
         var info = { filename: sourceObject.filename };
-        convertToLineColumn(source, pos, info);
+        if (pos === -1) {
+            this.message = "Maximum parse stack size exceeded";
+            return;
+        }
         if (pos >= source.length) {
             this.message = "Unexpected end of input: " + info.filename;
             return;
         }
+        convertToLineColumn(source, pos, info);
         this.message = info.filename + ":" + info.lineNumber + ":" + info.columnNumber;
     }
 

@@ -3,7 +3,7 @@ while (true) {
     try {
         a.join();
     } catch (err) {
-        if (err instanceof RangeError && err.message === 'too long result') continue;
+        if (err instanceof RangeError && err.message === 'Invalid string length') continue;
         throw err;
     }
 }

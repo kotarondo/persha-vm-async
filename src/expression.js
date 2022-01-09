@@ -417,6 +417,12 @@ function MultiplicativeOperator(operator, leftExpression, rightExpression) {
     });
 }
 
+function intrinsic_AdditionOperator(x, y) {
+    var z = x + y;
+    if (typeof z === 'string' && z.length > 1e6) throw VMRangeError("Invalid string length");
+    return z;
+}
+
 function AdditionOperator(leftExpression, rightExpression) {
     return CompilerContext.expression(function compile(ctx) {
         var lref = ctx.compileExpression(leftExpression);
@@ -425,7 +431,7 @@ function AdditionOperator(leftExpression, rightExpression) {
         var rval = ctx.compileGetValue(rref);
         var lprim = ctx.compileToPrimitive(lval);
         var rprim = ctx.compileToPrimitive(rval);
-        var text = "(" + lprim.name + "+" + rprim.name + ")";
+        var text = "intrinsic_AdditionOperator(" + lprim.name + "," + rprim.name + ")";
         if (lprim.types.isString() || rprim.types.isString()) {
             return ctx.constantString(text);
         } else if (lprim.types.isNotString() && rprim.types.isNotString()) {
