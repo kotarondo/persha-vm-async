@@ -245,7 +245,6 @@ JSONParser = (function() {
             count = 1;
         }
         for (var i = 0; i < count; i++) {
-            /* istanbul ignore if */
             if (current === undefined) throw SyntaxError();
             current = source[++currentPos];
         }

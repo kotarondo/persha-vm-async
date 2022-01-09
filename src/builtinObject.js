@@ -80,6 +80,7 @@ async function Object_getOwnPropertyNames(thisValue, argumentsList) {
     var n = 0;
     var P;
     while ((P = next()) !== undefined) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         await array.DefineOwnProperty(n, DataPropertyDescriptor(P, true, true, true), false);
         n++;
     }
@@ -118,11 +119,13 @@ async function Object_defineProperties(thisValue, argumentsList) {
     var descriptors = [];
     var P;
     while ((P = names()) !== undefined) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var descObj = await props.Get(P);
         var desc = await ToPropertyDescriptor(descObj);
         descriptors.push([P, desc]);
     }
     for (var i = 0; i < descriptors.length; i++) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var pair = descriptors[i];
         var P = pair[0];
         var desc = pair[1];
@@ -137,6 +140,7 @@ async function Object_seal(thisValue, argumentsList) {
     var next = O.enumerator(true, false);
     var P;
     while ((P = next()) !== undefined) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var desc = O.GetOwnProperty(P);
         if (desc.Configurable === true) {
             var desc = FullPropertyDescriptor(desc.Value, desc.Writable, desc.Get, desc.Set, desc.Enumerable, false);
@@ -153,6 +157,7 @@ async function Object_freeze(thisValue, argumentsList) {
     var next = O.enumerator(true, false);
     var P;
     while ((P = next()) !== undefined) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var desc = O.GetOwnProperty(P);
         var desc = FullPropertyDescriptor(desc.Value, (desc.Writable === true) ? false : desc.Writable, desc.Get, desc.Set,
             desc.Enumerable, false);
@@ -175,6 +180,7 @@ async function Object_isSealed(thisValue, argumentsList) {
     var next = O.enumerator(true, false);
     var P;
     while ((P = next()) !== undefined) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var desc = O.GetOwnProperty(P);
         if (desc.Configurable === true) return false;
     }
@@ -188,6 +194,7 @@ async function Object_isFrozen(thisValue, argumentsList) {
     var next = O.enumerator(true, false);
     var P;
     while ((P = next()) !== undefined) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var desc = O.GetOwnProperty(P);
         if (IsDataDescriptor(desc) === true) {
             if (desc.Writable === true) return false;
@@ -212,6 +219,7 @@ async function Object_keys(thisValue, argumentsList) {
     var n = 0;
     var P;
     while ((P = next()) !== undefined) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         await array.DefineOwnProperty(n, DataPropertyDescriptor(P, true, true, true), false);
         n++;
     }
@@ -251,6 +259,7 @@ async function Object_prototype_isPrototypeOf(thisValue, argumentsList) {
     if (Type(V) !== TYPE_Object) return false;
     var O = await ToObject(thisValue);
     while (true) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var V = V.Prototype;
         if (V === null) return false;
         if (O === V) return true;
@@ -282,6 +291,7 @@ async function set_Object_prototype___proto__(thisValue, argumentsList) {
     if (O.Extensible === false) throw VMTypeError();
     var p = proto;
     while (p !== null) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         if (p === O) throw VMTypeError();
         p = p.Prototype;
     }

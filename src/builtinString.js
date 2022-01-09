@@ -52,6 +52,7 @@ async function String_Construct(argumentsList) {
 async function String_fromCharCode(thisValue, argumentsList) {
     var buffer = [];
     for (var i = 0; i < argumentsList.length; i++) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         buffer.push(charCode2String(await ToUint16(argumentsList[i])));
     }
     var S = buffer.join('');
@@ -94,6 +95,7 @@ async function String_prototype_concat(thisValue, argumentsList) {
     var args = argumentsList;
     var R = S;
     for (var i = 0; i < args.length; i++) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var next = args[i];
         var R = R + await ToString(next);
     }
@@ -111,6 +113,7 @@ async function String_prototype_indexOf(thisValue, argumentsList) {
     var start = Math.min(Math.max(pos, 0), len);
     var searchLen = searchStr.length;
     for (var k = start; k + searchLen <= len; k++) {
+        if ((stepsLimit -= 1) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         if (searchStr === S.substring(k, k + searchLen)) return k;
     }
     return -1;
@@ -133,6 +136,7 @@ async function String_prototype_lastIndexOf(thisValue, argumentsList) {
     var start = Math.min(Math.max(pos, 0), len);
     var searchLen = searchStr.length;
     for (var k = start; k >= 0; k--) {
+        if ((stepsLimit -= 1) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         if ((k + searchLen <= len) && searchStr === S.substring(k, k + searchLen)) return k;
     }
     return -1;
@@ -164,6 +168,7 @@ async function String_prototype_match(thisValue, argumentsList) {
         var n = 0;
         var lastMatch = true;
         while (lastMatch === true) {
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var result = await RegExp_prototype_exec(rx, [S]);
             if (result === null) {
                 lastMatch = false;
@@ -200,6 +205,7 @@ async function String_prototype_replace(thisValue, argumentsList) {
             var previousLastIndex = 0;
         }
         while (true) {
+            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var matched = await RegExp_prototype_exec(searchValue, [string]);
             if (matched === null) {
                 break;
@@ -217,6 +223,7 @@ async function String_prototype_replace(thisValue, argumentsList) {
             var len = await matched.Get("length");
             var args = [];
             for (var i = 0; i < len; i++) {
+                if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                 args[i] = await matched.Get(i);
             }
             var newstring = await convertingReplaceValue(indx, args);
@@ -244,6 +251,7 @@ async function String_prototype_replace(thisValue, argumentsList) {
             var newstring = await ToString(replaceValue);
             var buffer = [];
             for (var i = 0; i < newstring.length; i++) {
+                if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                 var c = newstring[i];
                 if (c === '$') {
                     var a = newstring[i + 1];
@@ -317,6 +325,7 @@ async function String_prototype_search(thisValue, argumentsList) {
     }
     var result = -1;
     for (var i = 0; i <= string.length; i++) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var r = rx.Match(string, i);
         if (r !== failure) {
             var result = i;
@@ -384,6 +393,7 @@ async function String_prototype_split(thisValue, argumentsList) {
     }
     var q = p;
     while (q !== s) {
+        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var z = SplitMatch(S, q, R);
         if (z === failure) {
             var q = q + 1;
@@ -400,6 +410,7 @@ async function String_prototype_split(thisValue, argumentsList) {
                 var p = e;
                 var i = 0;
                 while (i < R.NCapturingParens) {
+                    if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                     var i = i + 1;
                     await A.DefineOwnProperty(lengthA, DataPropertyDescriptor(cap[i], true, true, true), false);
                     lengthA++;
@@ -449,6 +460,7 @@ async function String_prototype_toLowerCase(thisValue, argumentsList) {
     var S = await ToString(thisValue);
     var buffer = [];
     for (var i = 0; i < S.length; i++) {
+        if ((stepsLimit -= 1) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         buffer[i] = unicodeToLowerCase[S[i]] || S[i];
     }
     return buffer.join('');
@@ -465,6 +477,7 @@ async function String_prototype_toUpperCase(thisValue, argumentsList) {
     var S = await ToString(thisValue);
     var buffer = [];
     for (var i = 0; i < S.length; i++) {
+        if ((stepsLimit -= 1) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         buffer[i] = unicodeToUpperCase[S[i]] || S[i];
     }
     return buffer.join('');
@@ -481,10 +494,12 @@ async function String_prototype_trim(thisValue, argumentsList) {
     var S = await ToString(thisValue);
     var from = 0;
     while (from !== S.length && (isWhiteSpace(S[from]) || isLineTerminator(S[from]))) {
+        if ((stepsLimit -= 1) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         from++;
     }
     var to = S.length;
     while (to !== from && (isWhiteSpace(S[to - 1]) || isLineTerminator(S[to - 1]))) {
+        if ((stepsLimit -= 1) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         to--;
     }
     return S.substring(from, to);
