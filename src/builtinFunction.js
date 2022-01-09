@@ -46,14 +46,15 @@ async function Function_Construct(argumentsList) {
         var body = argumentsList[0];
     } else {
         var firstArg = argumentsList[0];
-        var P = await ToString(firstArg);
+        var P = [await ToString(firstArg)];
         var k = 2;
         while (k < argCount) {
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var nextArg = argumentsList[k - 1];
-            var P = P + "," + await ToString(nextArg);
+            P.push(await ToString(nextArg));
             k++;
         }
+        P = P.join();
         var body = argumentsList[k - 1];
     }
     var body = await ToString(body);

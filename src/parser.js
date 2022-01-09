@@ -165,7 +165,7 @@ const Parser = (function() {
     }
 
     function readCode(type, parameterText, codeText, strictMode, filename) {
-        if ((stepsLimit -= 20 * codeText.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+        if ((stepsLimit -= 100 * codeText.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         if (type === "global" || type === "eval") {
             setup(type, parameterText, codeText, strictMode, filename);
             code = Code(type);
