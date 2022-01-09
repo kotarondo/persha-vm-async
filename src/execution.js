@@ -206,7 +206,7 @@ function setRunningPos(pos) {
     if (stepsLimit < 0) {
         throw new ErrorCapsule(VMRangeError("steps overflow"));
     }
-    stepsLimit -= 1000;
+    stepsLimit -= 100;
 }
 
 function setRunningPosCompiled(pos) {
@@ -264,6 +264,7 @@ function getStackTrace() {
         });
         var ctx = outerExecutionContext;
         while (stackTrace.length < stackTraceLimit) {
+            stepsLimit -= 1;
             stackTrace.push({
                 func: ctx.runningFunction,
                 code: ctx.runningCode,

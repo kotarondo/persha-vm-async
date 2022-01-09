@@ -17,7 +17,7 @@ async function test2(realm, source, filename) {
     var begin = Date.now()
     var stepsLimit = 0
     var steps = 0
-    while (steps < 10*1000*1000) {
+    while (steps < 1000 * 10000) {
         vm.context.stepsLimit = stepsLimit
         var { type, value } = await vm.evaluateProgram(realm, source, filename)
         if (!(type === 'throw' && String(value) === 'RangeError: steps overflow')) {

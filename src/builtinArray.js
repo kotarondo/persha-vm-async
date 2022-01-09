@@ -236,7 +236,7 @@ async function Array_prototype_reverse(thisValue, argumentsList) {
     var middle = Math.floor(len / 2);
     var lower = 0;
     while (lower !== middle) {
-        if ((stepsLimit -= 50) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+        if ((stepsLimit -= 70) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var upper = len - lower - 1;
         var upperP = upper;
         var lowerP = lower;
@@ -458,14 +458,14 @@ async function Array_prototype_splice(thisValue, argumentsList) {
         }
         var k = len;
         while (k > (len - actualDeleteCount + itemCount)) {
-            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+            if ((stepsLimit -= 30) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             O.Delete(k - 1, true);
             k--;
         }
     } else if (itemCount > actualDeleteCount) {
         var k = (len - actualDeleteCount);
         while (k > actualStart) {
-            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+            if ((stepsLimit -= 30) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var from = k + actualDeleteCount - 1;
             var to = k + itemCount - 1;
             var fromPresent = O.HasProperty(from);
@@ -572,7 +572,7 @@ async function Array_prototype_lastIndexOf(thisValue, argumentsList) {
         var k = len - Math.abs(n);
     }
     while (k >= 0) {
-        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+        if ((stepsLimit -= 30) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var kPresent = O.HasProperty(k);
         if (kPresent === true) {
             var elementK = await O.Get(k);
@@ -775,7 +775,7 @@ async function Array_prototype_reduceRight(thisValue, argumentsList) {
     } else {
         var kPresent = false;
         while (kPresent === false && (k >= 0)) {
-            if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+            if ((stepsLimit -= 30) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var Pk = k;
             var kPresent = O.HasProperty(Pk);
             if (kPresent === true) {
@@ -786,7 +786,7 @@ async function Array_prototype_reduceRight(thisValue, argumentsList) {
         if (kPresent === false) throw VMTypeError();
     }
     while (k >= 0) {
-        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+        if ((stepsLimit -= 30) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
         if (kPresent === true) {

@@ -425,12 +425,13 @@ function AdditionOperator(leftExpression, rightExpression) {
         var rval = ctx.compileGetValue(rref);
         var lprim = ctx.compileToPrimitive(lval);
         var rprim = ctx.compileToPrimitive(rval);
+        var text = "(" + lprim.name + "+" + rprim.name + ")";
         if (lprim.types.isString() || rprim.types.isString()) {
-            return ctx.constantString("(" + lprim.name + "+" + rprim.name + ")");
+            return ctx.constantString(text);
         } else if (lprim.types.isNotString() && rprim.types.isNotString()) {
-            return ctx.constantNumber("(" + lprim.name + "+" + rprim.name + ")");
+            return ctx.constantNumber(text);
         } else {
-            return ctx.constantValue("(" + lprim.name + "+" + rprim.name + ")");
+            return ctx.constantValue(text);
         }
     });
 }
