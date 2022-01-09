@@ -28,7 +28,7 @@ async function test2(realm, source, filename) {
         steps += stepsLimit
     }
     var elapsed = Date.now() - begin
-    console.log('elapsed:' + elapsed, ' steps:', steps, filename)
+    console.log('elapsed:' + elapsed, steps, filename)
 }
 
 async function test() {

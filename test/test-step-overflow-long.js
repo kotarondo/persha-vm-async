@@ -26,9 +26,9 @@ async function test2(realm, source, filename) {
     }
     var elapsed = Date.now() - begin
     if (elapsed > stepsLimit / 10000) {
-        console.log('elapsed:', '\x1b[31m' + elapsed + '\x1b[0m')
+        console.log('elapsed:', '\x1b[31m' + elapsed + '\x1b[0m', filename)
     } else {
-        console.log('elapsed:' + elapsed)
+        console.log('elapsed:' + elapsed, filename)
     }
 }
 
@@ -36,7 +36,6 @@ async function test() {
     while (filenames.length) {
         var filename = filenames.pop()
         if (!/\.js$/.test(filename)) continue
-        console.log(filename)
         var source = fs.readFileSync(filename, 'utf8')
         var realm = await vm.createRealm()
         await test2(realm, source, filename)

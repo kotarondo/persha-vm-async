@@ -54,7 +54,7 @@ async function test2(realm, para, text, args) {
         steps += stepsLimit
     }
     var elapsed = Date.now() - begin
-    console.log('elapsed:' + elapsed, ' steps:', steps)
+    console.log('elapsed:' + elapsed, steps, text)
 }
 
 test().then(test_success).catch(test_failed)
