@@ -131,7 +131,7 @@ async function Global_isFinite(thisValue, argumentsList) {
 
 function Encode(string, unescapedSet) {
     var strLen = string.length;
-    if ((stepsLimit -= 10*strLen) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+    if ((stepsLimit -= 10 * strLen) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     var R = "";
     var k = 0;
     while (true) {
@@ -292,7 +292,7 @@ async function Global_escape(thisValue, argumentsList) {
     var string = argumentsList[0];
     var Result1 = await ToString(string);
     var Result2 = Result1.length;
-    if ((stepsLimit -= 5*Result2) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+    if ((stepsLimit -= 5 * Result2) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     var R = [];
     var k = 0;
     while (true) {
