@@ -53,28 +53,29 @@ async function evaluateProgram(text, filename) {
             }
             throw e;
         }
-        await enterExecutionContextForGlobalCode(code);
-        var sourceElements = code.sourceElements;
-        if (sourceElements === undefined) return CompletionValue("normal", undefined, empty);
+        saveExecutionContext();
         try {
-            var ctx = new CompilerContext("");
-            sourceElements.compile(ctx);
-            var evaluate = ctx.finish();
-        } catch (e) {
-            console.error("CODEGEN ERROR:\n" + ctx.texts.join('\n'));
-            console.error(e.stack);
-            process.reallyExit(1);
-        }
-        try {
+            await enterExecutionContextForGlobalCode(code);
+            var sourceElements = code.sourceElements;
+            if (sourceElements === undefined) return CompletionValue("normal", undefined, empty);
+            try {
+                var ctx = new CompilerContext("");
+                sourceElements.compile(ctx);
+                var evaluate = ctx.finish();
+            } catch (e) {
+                console.error("CODEGEN ERROR:\n" + ctx.texts.join('\n'));
+                console.error(e.stack);
+                process.reallyExit(1);
+            }
             await evaluate();
             return CompletionValue("normal", undefined, empty);
-        } catch (V) {
-            if (V instanceof ErrorCapsule) V = V.error;
-            if (isInternalError(V)) throw V;
-            return CompletionValue("throw", exportValue(V), empty);
+        } finally {
+            exitExecutionContext();
         }
-    } finally {
-        exitExecutionContext();
+    } catch (V) {
+        if (V instanceof ErrorCapsule) V = V.error;
+        if (isInternalError(V)) throw V;
+        return CompletionValue("throw", exportValue(V), empty);
     }
 }
 

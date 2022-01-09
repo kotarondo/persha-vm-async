@@ -255,7 +255,6 @@ function getStackTrace() {
     if (!(stackTraceLimit < stackDepth)) {
         stackTraceLimit = stackDepth;
     }
-console.log({stackTraceLimit, pos:!!runningSourcePos, code:!!runningCode}, new Error().stack);
     var stackTrace = [];
     if (stackTrace.length < stackTraceLimit) {
         stackTrace.push({
@@ -277,7 +276,6 @@ console.log({stackTraceLimit, pos:!!runningSourcePos, code:!!runningCode}, new E
 }
 
 async function enterExecutionContextForGlobalCode(code) {
-    saveExecutionContext();
     LexicalEnvironment = realm.theGlobalEnvironment;
     VariableEnvironment = realm.theGlobalEnvironment;
     ThisBinding = realm.theGlobalObject;
@@ -288,7 +286,6 @@ async function enterExecutionContextForGlobalCode(code) {
 }
 
 async function enterExecutionContextForEvalCode(code, direct, lexEnv, varEnv, thisB) {
-    saveExecutionContext();
     if (direct) {
         LexicalEnvironment = lexEnv;
         VariableEnvironment = varEnv;

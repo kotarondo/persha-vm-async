@@ -49,6 +49,7 @@ async function Global_eval(thisValue, argumentsList, direct, strict, lexEnv, var
         }
         throw e;
     }
+    saveExecutionContext();
     try {
         await enterExecutionContextForEvalCode(code, direct, lexEnv, varEnv, thisB);
         var sourceElements = code.sourceElements;
