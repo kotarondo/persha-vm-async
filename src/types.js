@@ -281,12 +281,12 @@ async function GetValue(V) {
 async function specialGet(base, P) {
     var O = await ToObject(base);
     var desc = O.GetProperty(P);
-    if (desc === undefined) return undefined;
+    if (desc === undefined) return;
     if (desc.Value !== absent) return desc.Value;
     else {
         assert(IsAccessorDescriptor(desc), desc);
         var getter = desc.Get;
-        if (getter === undefined) return undefined;
+        if (getter === undefined) return;
         return await getter.Call(base, []);
     }
 }
@@ -389,7 +389,7 @@ function IsGenericDescriptor(Desc) {
 }
 
 function FromPropertyDescriptor(Desc) {
-    if (Desc === undefined) return undefined;
+    if (Desc === undefined) return;
     var obj = intrinsic_Object();
     if (IsDataDescriptor(Desc) === true) {
         assert(Desc.Value !== absent, Desc);
@@ -460,7 +460,7 @@ function default_GetProperty(P) {
     var prop = O.GetOwnProperty(P);
     if (prop !== undefined) return prop;
     var proto = O.Prototype;
-    if (proto === null) return undefined;
+    if (proto === null) return;
     return proto.GetProperty(P);
 }
 
@@ -469,19 +469,19 @@ function default_FastGetProperty(P) {
     var prop = O.properties[P];
     if (prop !== undefined) return prop;
     var proto = O.Prototype;
-    if (proto === null) return undefined;
+    if (proto === null) return;
     return proto.GetProperty(P);
 }
 
 async function default_Get(P) {
     var O = this;
     var desc = O.GetProperty(P);
-    if (desc === undefined) return undefined;
+    if (desc === undefined) return;
     if (desc.Value !== absent) return desc.Value;
     else {
         assert(IsAccessorDescriptor(desc), desc);
         var getter = desc.Get;
-        if (getter === undefined) return undefined;
+        if (getter === undefined) return;
         return await getter.Call(O, []);
     }
 }
@@ -491,15 +491,15 @@ async function default_FastGet(P) {
     var desc = O.properties[P];
     if (desc === undefined) {
         var proto = O.Prototype;
-        if (proto === null) return undefined;
+        if (proto === null) return;
         var desc = proto.GetProperty(P);
-        if (desc === undefined) return undefined;
+        if (desc === undefined) return;
     }
     if (desc.Value !== absent) return desc.Value;
     else {
         assert(IsAccessorDescriptor(desc), desc);
         var getter = desc.Get;
-        if (getter === undefined) return undefined;
+        if (getter === undefined) return;
         return await getter.Call(O, []);
     }
 }
@@ -880,7 +880,7 @@ function safe_get_property(O, P) {
         var prop = O.properties[P];
         if (prop) return prop;
         var proto = O.Prototype;
-        if (proto === null) return undefined;
+        if (proto === null) return;
         O = proto;
     }
 }
@@ -890,5 +890,5 @@ function safe_get_primitive_value(O, P) {
     if (prop && isPrimitiveValue(prop.Value)) {
         return prop.Value;
     }
-    return undefined;
+    return;
 }

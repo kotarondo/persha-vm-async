@@ -64,7 +64,7 @@ const Class_DeclarativeEnvironment = ({
     GetBindingValue: async function(N, S) {
         assert(this.attributes[N] !== undefined, N);
         if (this.attributes[N] === 3) {
-            if (S === false) return undefined;
+            if (S === false) return;
             throw VMReferenceError(N);
         }
         return this.values[N];
@@ -79,7 +79,7 @@ const Class_DeclarativeEnvironment = ({
     },
 
     ImplicitThisValue: function() {
-        return undefined;
+        return;
     },
 
     CreateImmutableBinding: function(N) {
@@ -121,7 +121,7 @@ const Class_ObjectEnvironment = ({
         var bindings = this.bindings;
         var value = bindings.HasProperty(N);
         if (value === false) {
-            if (S === false) return undefined;
+            if (S === false) return;
             throw VMReferenceError(N);
         }
         return await bindings.Get(N);
@@ -134,7 +134,7 @@ const Class_ObjectEnvironment = ({
 
     ImplicitThisValue: function() {
         if (this.provideThis === true) return this.bindings;
-        return undefined;
+        return;
     },
 });
 
@@ -161,7 +161,7 @@ function GetIdentifierEnvironmentRecord(lex, skip, name) {
         lex = lex.outer;
     }
     while (true) {
-        if (lex === null) return undefined;
+        if (lex === null) return;
         if (lex.HasBinding(name)) return lex;
         lex = lex.outer;
     }
@@ -521,12 +521,12 @@ async function Global_FastGetBindingValue(N, S) {
     if (desc === undefined) {
         var proto = bindings.Prototype;
         if (proto === null) {
-            if (S === false) return undefined;
+            if (S === false) return;
             throw VMReferenceError(N);
         }
         var desc = proto.GetProperty(N);
         if (desc === undefined) {
-            if (S === false) return undefined;
+            if (S === false) return;
             throw VMReferenceError(N);
         }
     }
@@ -535,7 +535,7 @@ async function Global_FastGetBindingValue(N, S) {
         assert(IsAccessorDescriptor(desc), desc);
         var getter = desc.Get;
         if (getter === undefined) {
-            return undefined;
+            return;
         }
         return await getter.Call(binding, []);
     }

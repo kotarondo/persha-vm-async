@@ -211,7 +211,7 @@ const RegExpFactory = (function() {
         var m = evaluateAssertion();
         if (m !== undefined) return m;
         var m = evaluateAtom();
-        if (m === undefined) return undefined;
+        if (m === undefined) return;
         var q = evaluateQuantifier();
         if (q === undefined) {
             return m;
@@ -423,7 +423,7 @@ const RegExpFactory = (function() {
                 ctx.text("var r= (a === b);");
             });
         }
-        return undefined;
+        return;
     }
 
     function evaluateAssertion() {
@@ -473,7 +473,7 @@ const RegExpFactory = (function() {
                 ctx.jump(c);
             });
         }
-        return undefined;
+        return;
     }
 
     function evaluateQuantifier() {
@@ -504,7 +504,7 @@ const RegExpFactory = (function() {
                 max = evaluateDecimalDigits();
                 expecting('}'); // '{'
             } else throw SyntaxError();
-        } else return undefined;
+        } else return;
         var greedy = true;
         if (current === '?') {
             proceed();
@@ -530,7 +530,7 @@ const RegExpFactory = (function() {
     }
 
     function evaluateAtom() {
-        if (current === undefined) return undefined;
+        if (current === undefined) return;
         if (current === '.') {
             proceed();
             /* original code
@@ -587,7 +587,7 @@ const RegExpFactory = (function() {
                 ctx.jump(c);
             });
         }
-        if (isIncluded(current, "*+?)|")) return undefined;
+        if (isIncluded(current, "*+?)|")) return;
         var A = oneElementCharSet(proceed());
         return CharacterSetMatcher(A, false);
     }
@@ -722,7 +722,7 @@ const RegExpFactory = (function() {
             case 'c':
                 if ((mvDigitChar(current) >= 10) === false) {
                     if (isIncluded(current, "/^$\\.*+?()[]{}|")) throw SyntaxError();
-                    return undefined;
+                    return;
                 }
                 var ch = proceed();
                 var i = toCharCode(ch);
@@ -732,7 +732,7 @@ const RegExpFactory = (function() {
                 var x = 0;
                 for (var i = 0; i < 2; i++) {
                     if (!isHexDigitChar(current)) {
-                        return undefined;
+                        return;
                     }
                     x = (x << 4) + mvDigitChar(current);
                     proceed();
@@ -742,7 +742,7 @@ const RegExpFactory = (function() {
                 var x = 0;
                 for (var i = 0; i < 4; i++) {
                     if (!isHexDigitChar(current)) {
-                        return undefined;
+                        return;
                     }
                     x = (x << 4) + mvDigitChar(current);
                     proceed();
@@ -756,7 +756,7 @@ const RegExpFactory = (function() {
     }
 
     function evaluateDecimalEscape() {
-        if (isDecimalDigitChar(current) === false) return undefined;
+        if (isDecimalDigitChar(current) === false) return;
         if (current === '0') {
             proceed();
             if (isDecimalDigitChar(current)) throw SyntaxError();
@@ -771,7 +771,7 @@ const RegExpFactory = (function() {
     }
 
     function evaluateOctalEscape() {
-        if (isDecimalDigitChar(current) === false) return undefined;
+        if (isDecimalDigitChar(current) === false) return;
         if (current === '0') {
             proceed();
             if (isDecimalDigitChar(current)) throw SyntaxError();

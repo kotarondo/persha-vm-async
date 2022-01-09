@@ -519,10 +519,10 @@ function String_GetOwnProperty(P) {
     var desc = default_GetOwnProperty.call(S, P);
     if (desc !== undefined) return desc;
     var index = ToArrayIndex(P);
-    if (index < 0) return undefined;
+    if (index < 0) return;
     var str = S.PrimitiveValue;
     var len = str.length;
-    if (len <= index) return undefined;
+    if (len <= index) return;
     var resultStr = str[index];
     return DataPropertyDescriptor(resultStr, false, true, false);
 }

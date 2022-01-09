@@ -199,7 +199,7 @@ async function Array_prototype_pop(thisValue, argumentsList) {
     var len = await ToUint32(lenVal);
     if (len === 0) {
         await O.Put("length", 0, true);
-        return undefined;
+        return;
     } else {
         var indx = len - 1;
         var element = await O.Get(indx);
@@ -264,7 +264,7 @@ async function Array_prototype_shift(thisValue, argumentsList) {
     var len = await ToUint32(lenVal);
     if (len === 0) {
         await O.Put("length", 0, true);
-        return undefined;
+        return;
     }
     var first = await O.Get(0);
     var k = 1;
@@ -676,7 +676,7 @@ async function Array_prototype_forEach(thisValue, argumentsList) {
         }
         k++;
     }
-    return undefined;
+    return;
 }
 
 async function Array_prototype_map(thisValue, argumentsList) {

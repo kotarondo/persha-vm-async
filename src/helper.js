@@ -156,5 +156,5 @@ function isInternalError(x) {
 }
 
 function ReturnUndefined() {
-    return undefined;
+    return;
 }

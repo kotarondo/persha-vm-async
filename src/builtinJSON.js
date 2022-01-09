@@ -409,7 +409,7 @@ async function JSON_stringify(thisValue, argumentsList) {
             if (value.Class === "Array") return await JA(value);
             else return await JO(value);
         }
-        return undefined;
+        return;
     }
 
     function Quote(value) {

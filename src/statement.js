@@ -47,7 +47,7 @@ function BlockStatement(statementList) {
 }
 
 function StatementList(statements) {
-    if (statements.length === 0) return undefined;
+    if (statements.length === 0) return;
 
     async function evaluate() {
         var sl = CompletionValue("normal", empty, empty);

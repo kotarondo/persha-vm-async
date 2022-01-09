@@ -34,7 +34,7 @@
 // ECMAScript 5.1: 14 Program
 
 function SourceElements(statements) {
-    if (statements.length === 0) return undefined;
+    if (statements.length === 0) return;
 
     async function evaluate() {
         try {

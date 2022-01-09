@@ -650,7 +650,7 @@ const Parser = (function() {
             var labelset = labelStack[i];
             if (isIncluded(identifier, labelset)) return labelset;
         }
-        return undefined;
+        return;
     }
 
     function readExpression(isNoIn) {
@@ -1292,7 +1292,7 @@ const Parser = (function() {
         isStringLiteral = false;
         isIdentifierName = false;
         isEscaped = false;
-        if (current === undefined) return undefined;
+        if (current === undefined) return;
         var c = proceed();
         switch (c) {
             case '{':
@@ -1620,7 +1620,7 @@ const Parser = (function() {
             if (!isIdentifierPart(c)) throw SyntaxError();
             return c;
         }
-        if (!isIdentifierPart(current)) return undefined;
+        if (!isIdentifierPart(current)) return;
         return proceed();
     }
 

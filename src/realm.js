@@ -48,7 +48,7 @@ function createRealmObject(realmC) {
     var proxyHandler = {
         getOwnPropertyDescriptor: function(target, P) {
             var v = proxyHandler.get(target, P);
-            if (!v) return undefined;
+            if (!v) return;
             return { value: v, writable: true, enumerable: true, configurable: true };
         },
         has: function(target, P) {
@@ -57,7 +57,7 @@ function createRealmObject(realmC) {
         get: function(target, P) {
             var v = target[P];
             if (v) return v;
-            if (deleted[P]) return undefined;
+            if (deleted[P]) return;
             var v = predefined[P];
             if (v) target[P] = v;
             return v;
