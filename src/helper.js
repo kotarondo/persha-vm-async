@@ -147,11 +147,8 @@ function isPrimitiveValue(x) {
 }
 
 function isInternalError(x) {
-    if (isPrimitiveValue(x)) {
-        return false;
-    }
+    if (isPrimitiveValue(x)) return false;
     if (x.Class) return false;
-    if (x instanceof ErrorCapsule) return true;
     return true;
 }
 

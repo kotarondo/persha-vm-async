@@ -131,7 +131,7 @@ async function Array_prototype_concat(thisValue, argumentsList) {
     for (var i = 0; i < items.length; i++) {
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var E = items[i];
-        if (E.Class === "Array") {
+        if (Type(E) === TYPE_Object && E.Class === "Array") {
             var k = 0;
             var len = await E.Get("length");
             while (k < len) {
