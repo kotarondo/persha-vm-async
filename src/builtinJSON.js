@@ -480,7 +480,7 @@ async function JSON_stringify(thisValue, argumentsList) {
                 partial.push(member);
             }
         }
-        if (partial === empty) {
+        if (partial.length === 0) {
             var final = "{}";
         } else if (gap === "") {
             var properties = partial.join(',');
@@ -514,7 +514,7 @@ async function JSON_stringify(thisValue, argumentsList) {
             }
             index++;
         }
-        if (partial === empty) {
+        if (partial.length === 0) {
             var final = "[]";
         } else if (gap === "") {
             var properties = partial.join(',');
