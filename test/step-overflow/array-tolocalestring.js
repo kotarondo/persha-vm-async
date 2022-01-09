@@ -1,2 +1,9 @@
 var a = new Array(0xffffffff);
-a.toLocaleString();
+while (true) {
+    try {
+        a.toLocaleString();
+    } catch (err) {
+        if (err instanceof RangeError && err.message === 'too long result') continue;
+        throw err;
+    }
+}

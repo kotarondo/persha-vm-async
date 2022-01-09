@@ -102,9 +102,12 @@ async function Array_prototype_toLocaleString(thisValue, argumentsList) {
         // end of bug fix
     }
     var k = 1;
+    var S = [];
+    var ll = 0;
     while (k < len) {
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
-        var S = R + separator;
+        if (ll > 1e6) throw new VMRangeError("too long result");
+        ll += separator.length;
         var nextElement = await array.Get(k);
         if (nextElement === undefined || nextElement === null) {
             var R = "";
@@ -117,10 +120,11 @@ async function Array_prototype_toLocaleString(thisValue, argumentsList) {
             var R = await ToString(R);
             // end of bug fix
         }
-        var R = S + R;
+        S.push(R);
+        ll += R.length;
         k++;
     }
-    return R;
+    return S.join(separator);
 }
 
 async function Array_prototype_concat(thisValue, argumentsList) {
@@ -173,19 +177,23 @@ async function Array_prototype_join(thisValue, argumentsList) {
         var R = await ToString(element0);
     }
     var k = 1;
+    var S = [];
+    var ll = 0;
     while (k < len) {
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
-        var S = R + sep;
+        if (ll > 1e6) throw new VMRangeError("too long result");
+        ll += sep.length;
         var element = await O.Get(k);
         if (element === undefined || element === null) {
             var next = "";
         } else {
             var next = await ToString(element);
         }
-        var R = S + next;
+        S.push(next);
+        ll += next.length;
         k++;
     }
-    return R;
+    return S.join(sep);
 }
 
 async function Array_prototype_pop(thisValue, argumentsList) {
@@ -488,7 +496,7 @@ async function Array_prototype_unshift(thisValue, argumentsList) {
     var argCount = argumentsList.length;
     var k = len;
     while (k > 0) {
-        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+        if ((stepsLimit -= 30) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var from = k - 1;
         var to = k + argCount - 1;
         var fromPresent = O.HasProperty(from);
