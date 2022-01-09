@@ -192,7 +192,7 @@ var runningSourcePos;
 var outerExecutionContext;
 var stackDepth = 0;
 var stepsLimit;
-var stackDepthLimit = 400;
+var stackDepthLimit = 1000;
 
 class ErrorCapsule extends Error {
     constructor(error) {

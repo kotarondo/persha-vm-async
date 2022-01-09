@@ -107,7 +107,6 @@ async function get_Function_prototype_name(thisValue, argumentsList) {
 }
 
 async function Function_prototype_apply(thisValue, argumentsList) {
-
     var func = thisValue;
     var thisArg = argumentsList[0];
     var argArray = argumentsList[1];

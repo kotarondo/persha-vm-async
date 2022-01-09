@@ -39,7 +39,6 @@ async function evaluateProgram(text, filename) {
     assert(typeof text === 'string');
     assert(!filename || typeof filename === 'string');
     try {
-        createDefaultExportMap(); // prefetch
         try {
             var code = Parser.readCode('global', '', text, false, filename);
         } catch (e) {
@@ -84,7 +83,6 @@ async function evaluateFunction(parameterText, codeText, filename, args) {
     assert(typeof parameterText === 'string');
     assert(!filename || typeof filename === 'string');
     try {
-        createDefaultExportMap(); // prefetch
         try {
             var code = Parser.readCode("function", parameterText, codeText, false, filename);
         } catch (e) {
@@ -115,20 +113,10 @@ async function evaluateFunction(parameterText, codeText, filename, args) {
 
 function createDefaultExportMap() {
     var map = new Map();
-    map.set(realm.Object_prototype, Object.prototype);
-    map.set(realm.Array_prototype, Array.prototype);
-    map.set(realm.String_prototype, String.prototype);
-    map.set(realm.Boolean_prototype, Boolean.prototype);
-    map.set(realm.Number_prototype, Number.prototype);
-    map.set(realm.Date_prototype, Date.prototype);
-    map.set(realm.RegExp_prototype, RegExp.prototype);
-    map.set(realm.Error_prototype, Error.prototype);
-    map.set(realm.EvalError_prototype, EvalError.prototype);
-    map.set(realm.RangeError_prototype, RangeError.prototype);
-    map.set(realm.ReferenceError_prototype, ReferenceError.prototype);
-    map.set(realm.SyntaxError_prototype, SyntaxError.prototype);
-    map.set(realm.TypeError_prototype, TypeError.prototype);
-    map.set(realm.URIError_prototype, URIError.prototype);
+    for (var name of ['Object', 'Array', 'String', 'Boolean', 'Number', 'Date', 'RegExp', 'Error', 'EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError']) {
+        if (!realm.hasOwnProperty(name + '_prototype')) continue;
+        map.set(realm[name + '_prototype'], global[name].prototype);
+    }
     return map;
 }
 

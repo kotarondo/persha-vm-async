@@ -16,7 +16,7 @@ async function test1(realm, para, text, args) {
     var { type, value } = await vm.evaluateFunction(realm, para, text, 'test.js', args)
     var elapsed = Date.now() - begin
     assert(type === 'throw' && String(value) === 'RangeError: stack overflow')
-    console.log('elapsed:' + elapsed, text)
+    console.log('elapsed:' + elapsed, text, value.stack)
 }
 
 test().then(test_success).catch(test_failed)
