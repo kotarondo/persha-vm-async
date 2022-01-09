@@ -19,10 +19,20 @@ async function test() {
     await test1(realm, '', 'with({})for(;;);', [])
     await test1(realm, '', 'eval("with({})for(;;);")', [])
     await test1(realm, '', 'try{for(;;);}finally{x=1;throw 1}', [])
+    await test2(realm, '', 'for(;;);', [])
 }
 
 async function test1(realm, para, text, args) {
     vm.context.stepsLimit = 10000000
+    var begin = Date.now()
+    var { type, value } = await vm.evaluateFunction(realm, para, text, 'test.js', args)
+    var elapsed = Date.now() - begin
+    assert(type === 'throw' && String(value) === 'RangeError: steps overflow')
+    console.log('elapsed:' + elapsed, text)
+}
+
+async function test2(realm, para, text, args) {
+    vm.context.stepsLimit = -1
     var begin = Date.now()
     var { type, value } = await vm.evaluateFunction(realm, para, text, 'test.js', args)
     var elapsed = Date.now() - begin

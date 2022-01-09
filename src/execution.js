@@ -194,8 +194,11 @@ var stackDepth = 0;
 var stepsLimit;
 var stackDepthLimit = 400;
 
-function ErrorCapsule(error) {
-    this.error = error;
+class ErrorCapsule extends Error {
+    constructor(error) {
+        super();
+        this.error = error;
+    }
 }
 
 function setRunningPos(pos) {
@@ -215,6 +218,8 @@ function setRunningPosCompiled(pos) {
 }
 
 function saveExecutionContext() {
+    if (stackDepth >= stackDepthLimit) throw new ErrorCapsule(VMRangeError("stack overflow"));
+    if ((stepsLimit -= 1000) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     stackDepth++;
     outerExecutionContext = ({
         LexicalEnvironment,
@@ -225,10 +230,6 @@ function saveExecutionContext() {
         runningSourcePos,
         outerExecutionContext,
     });
-    /* istanbul ignore next */
-    if (stackDepth > stackDepthLimit) throw new ErrorCapsule(VMRangeError("stack overflow"));
-    /* istanbul ignore next */
-    if ((stepsLimit -= 1000) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
 }
 
 function exitExecutionContext() {
@@ -254,6 +255,7 @@ function getStackTrace() {
     if (!(stackTraceLimit < stackDepth)) {
         stackTraceLimit = stackDepth;
     }
+console.log({stackTraceLimit, pos:!!runningSourcePos, code:!!runningCode}, new Error().stack);
     var stackTrace = [];
     if (stackTrace.length < stackTraceLimit) {
         stackTrace.push({

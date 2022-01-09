@@ -39,19 +39,20 @@ async function evaluateProgram(text, filename) {
     assert(typeof text === 'string');
     assert(!filename || typeof filename === 'string');
     try {
-        var code = Parser.readCode('global', '', text, false, filename);
-    } catch (e) {
-        if (e instanceof Parser.SyntaxError) {
-            var err = new SyntaxError(e.message);
-            return CompletionValue("throw", err.toString(), empty);
+        createDefaultExportMap(); // prefetch
+        try {
+            var code = Parser.readCode('global', '', text, false, filename);
+        } catch (e) {
+            if (e instanceof Parser.SyntaxError) {
+                var err = new SyntaxError(e.message);
+                return CompletionValue("throw", err.toString(), empty);
+            }
+            if (e instanceof Parser.ReferenceError) {
+                var err = new ReferenceError(e.message);
+                return CompletionValue("throw", err.toString(), empty);
+            }
+            throw e;
         }
-        if (e instanceof Parser.ReferenceError) {
-            var err = new ReferenceError(e.message);
-            return CompletionValue("throw", err.toString(), empty);
-        }
-        throw e;
-    }
-    try {
         await enterExecutionContextForGlobalCode(code);
         var sourceElements = code.sourceElements;
         if (sourceElements === undefined) return CompletionValue("normal", undefined, empty);
@@ -82,25 +83,26 @@ async function evaluateFunction(parameterText, codeText, filename, args) {
     assert(typeof parameterText === 'string');
     assert(!filename || typeof filename === 'string');
     try {
-        var code = Parser.readCode("function", parameterText, codeText, false, filename);
-    } catch (e) {
-        if (e instanceof Parser.SyntaxError) {
-            var err = new SyntaxError(e.message);
-            return CompletionValue("throw", err.toString(), empty);
+        createDefaultExportMap(); // prefetch
+        try {
+            var code = Parser.readCode("function", parameterText, codeText, false, filename);
+        } catch (e) {
+            if (e instanceof Parser.SyntaxError) {
+                var err = new SyntaxError(e.message);
+                return CompletionValue("throw", err.toString(), empty);
+            }
+            if (e instanceof Parser.ReferenceError) {
+                var err = new ReferenceError(e.message);
+                return CompletionValue("throw", err.toString(), empty);
+            }
+            throw e;
         }
-        if (e instanceof Parser.ReferenceError) {
-            var err = new ReferenceError(e.message);
-            return CompletionValue("throw", err.toString(), empty);
+        var argumentsList = [];
+        var map = createDefaultImportMap();
+        for (var i = 0; i < args.length; i++) {
+            argumentsList[i] = importValue(args[i], map);
         }
-        throw e;
-    }
-    var argumentsList = [];
-    var map = createDefaultImportMap();
-    for (var i = 0; i < args.length; i++) {
-        argumentsList[i] = importValue(args[i], map);
-    }
-    var F = CreateFunction(code, realm.theGlobalEnvironment);
-    try {
+        var F = CreateFunction(code, realm.theGlobalEnvironment);
         var r = await F.Call(null, argumentsList);
         return CompletionValue("normal", exportValue(r), empty);
     } catch (V) {

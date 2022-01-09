@@ -44,7 +44,6 @@ async function Array_Construct(argumentsList) {
     if (argumentsList.length !== 1) {
         defineWritable(obj, "length", argumentsList.length);
         for (var i = 0; i < argumentsList.length; i++) {
-            /* istanbul ignore next */
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             defineFree(obj, i, argumentsList[i]);
         }
@@ -104,7 +103,6 @@ async function Array_prototype_toLocaleString(thisValue, argumentsList) {
     }
     var k = 1;
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var S = R + separator;
         var nextElement = await array.Get(k);
@@ -131,14 +129,12 @@ async function Array_prototype_concat(thisValue, argumentsList) {
     var n = 0;
     var items = [O].concat(argumentsList);
     for (var i = 0; i < items.length; i++) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var E = items[i];
         if (E.Class === "Array") {
             var k = 0;
             var len = await E.Get("length");
             while (k < len) {
-                /* istanbul ignore next */
                 if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                 var P = k;
                 var exists = E.HasProperty(P);
@@ -178,7 +174,6 @@ async function Array_prototype_join(thisValue, argumentsList) {
     }
     var k = 1;
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var S = R + sep;
         var element = await O.Get(k);
@@ -217,7 +212,6 @@ async function Array_prototype_push(thisValue, argumentsList) {
     var n = await ToUint32(lenVal);
     var items = argumentsList;
     for (var i = 0; i < items.length; i++) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var E = items[i];
         await O.Put(n, E, true);
@@ -234,7 +228,6 @@ async function Array_prototype_reverse(thisValue, argumentsList) {
     var middle = Math.floor(len / 2);
     var lower = 0;
     while (lower !== middle) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 20) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var upper = len - lower - 1;
         var upperP = upper;
@@ -269,7 +262,6 @@ async function Array_prototype_shift(thisValue, argumentsList) {
     var first = await O.Get(0);
     var k = 1;
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var from = k;
         var to = k - 1;
@@ -312,7 +304,6 @@ async function Array_prototype_slice(thisValue, argumentsList) {
     }
     var n = 0;
     while (k < final) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
@@ -334,7 +325,6 @@ async function Array_prototype_sort(thisValue, argumentsList) {
     var obj = await ToObject(thisValue);
     var len = await ToUint32(await obj.Get("length"));
     var perm = [];
-    /* istanbul ignore next */
     if ((stepsLimit -= 30 * len) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     for (var i = 0; i < len; i++) {
         perm[i] = i;
@@ -366,7 +356,6 @@ async function Array_prototype_sort(thisValue, argumentsList) {
         var higher = [];
         var p = perm[l >>> 1];
         for (var i = 0; i < l; i++) {
-            /* istanbul ignore next */
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var q = perm[i];
             var c = (q === p) ? 0 : await SortCompare(q, p);
@@ -428,7 +417,6 @@ async function Array_prototype_splice(thisValue, argumentsList) {
     }
     var k = 0;
     while (k < actualDeleteCount) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var from = actualStart + k;
         var fromPresent = O.HasProperty(from);
@@ -448,7 +436,6 @@ async function Array_prototype_splice(thisValue, argumentsList) {
     if (itemCount < actualDeleteCount) {
         var k = actualStart;
         while (k < (len - actualDeleteCount)) {
-            /* istanbul ignore next */
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var from = k + actualDeleteCount;
             var to = k + itemCount;
@@ -463,7 +450,6 @@ async function Array_prototype_splice(thisValue, argumentsList) {
         }
         var k = len;
         while (k > (len - actualDeleteCount + itemCount)) {
-            /* istanbul ignore next */
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             O.Delete(k - 1, true);
             k--;
@@ -471,7 +457,6 @@ async function Array_prototype_splice(thisValue, argumentsList) {
     } else if (itemCount > actualDeleteCount) {
         var k = (len - actualDeleteCount);
         while (k > actualStart) {
-            /* istanbul ignore next */
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var from = k + actualDeleteCount - 1;
             var to = k + itemCount - 1;
@@ -487,7 +472,6 @@ async function Array_prototype_splice(thisValue, argumentsList) {
     }
     var k = actualStart;
     for (var i = 2; i < argumentsList.length; i++) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var E = argumentsList[i];
         await O.Put(k, E, true);
@@ -504,7 +488,6 @@ async function Array_prototype_unshift(thisValue, argumentsList) {
     var argCount = argumentsList.length;
     var k = len;
     while (k > 0) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var from = k - 1;
         var to = k + argCount - 1;
@@ -520,7 +503,6 @@ async function Array_prototype_unshift(thisValue, argumentsList) {
     var j = 0;
     var items = argumentsList;
     while (j !== items.length) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var E = items[j];
         await O.Put(j, E, true);
@@ -552,7 +534,6 @@ async function Array_prototype_indexOf(thisValue, argumentsList) {
         }
     }
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var kPresent = O.HasProperty(k);
         if (kPresent === true) {
@@ -583,7 +564,6 @@ async function Array_prototype_lastIndexOf(thisValue, argumentsList) {
         var k = len - Math.abs(n);
     }
     while (k >= 0) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var kPresent = O.HasProperty(k);
         if (kPresent === true) {
@@ -610,7 +590,6 @@ async function Array_prototype_every(thisValue, argumentsList) {
     }
     var k = 0;
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
@@ -638,7 +617,6 @@ async function Array_prototype_some(thisValue, argumentsList) {
     }
     var k = 0;
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
@@ -666,7 +644,6 @@ async function Array_prototype_forEach(thisValue, argumentsList) {
     }
     var k = 0;
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
@@ -694,7 +671,6 @@ async function Array_prototype_map(thisValue, argumentsList) {
     var A = await Array_Construct([len]);
     var k = 0;
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
@@ -724,7 +700,6 @@ async function Array_prototype_filter(thisValue, argumentsList) {
     var k = 0;
     var to = 0;
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
@@ -755,7 +730,6 @@ async function Array_prototype_reduce(thisValue, argumentsList) {
     } else {
         var kPresent = false;
         while (kPresent === false && (k < len)) {
-            /* istanbul ignore next */
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var Pk = k;
             var kPresent = O.HasProperty(Pk);
@@ -767,7 +741,6 @@ async function Array_prototype_reduce(thisValue, argumentsList) {
         if (kPresent === false) throw VMTypeError();
     }
     while (k < len) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
@@ -794,7 +767,6 @@ async function Array_prototype_reduceRight(thisValue, argumentsList) {
     } else {
         var kPresent = false;
         while (kPresent === false && (k >= 0)) {
-            /* istanbul ignore next */
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             var Pk = k;
             var kPresent = O.HasProperty(Pk);
@@ -806,7 +778,6 @@ async function Array_prototype_reduceRight(thisValue, argumentsList) {
         if (kPresent === false) throw VMTypeError();
     }
     while (k >= 0) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var Pk = k;
         var kPresent = O.HasProperty(Pk);
@@ -844,7 +815,6 @@ async function Array_DefineOwnProperty(P, Desc, Throw) {
         /* istanbul ignore if */
         if (succeeded === false) return false;
         while (newLen < oldLen) {
-            /* istanbul ignore next */
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             oldLen = oldLen - 1;
             var deleteSucceeded = A.Delete(oldLen, false);
@@ -898,7 +868,6 @@ async function Array_FastPut(P, V, Throw) {
         if (newLen !== V) throw VMRangeError();
         if (oldLen - newLen > 2 * O.numProps) {
             for (var P in O.properties) {
-                /* istanbul ignore next */
                 if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                 var index = ToArrayIndex(P);
                 if (index >= newLen) {
@@ -909,7 +878,6 @@ async function Array_FastPut(P, V, Throw) {
             }
             ownDesc.Value = newLen;
             for (var P in O.properties) {
-                /* istanbul ignore next */
                 if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
                 var index = ToArrayIndex(P);
                 if (index >= newLen) {
@@ -920,7 +888,6 @@ async function Array_FastPut(P, V, Throw) {
         }
         ownDesc.Value = newLen;
         while (newLen < oldLen) {
-            /* istanbul ignore next */
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
             oldLen = oldLen - 1;
             var deleteSucceeded = O.Delete(oldLen, false);

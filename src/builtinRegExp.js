@@ -48,7 +48,6 @@ const RegExpFactory = (function() {
     var currentPos;
 
     function setPattern(pattern) {
-        /* istanbul ignore next */
         if ((stepsLimit -= pattern.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         source = pattern;
         currentPos = 0;

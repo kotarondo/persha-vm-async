@@ -25,7 +25,7 @@ global.test_success = function() {
 }
 
 global.test_failed = function(err) {
-    console.log("FAILED", err)
+    console.log("FAILED", err.stack || err)
     process.exit(99)
 }
 

@@ -256,7 +256,6 @@ async function get_Error_prototype_stack(thisValue, argumentsList) {
     var A = [];
     A[0] = await Error_prototype_toString(thisValue, []);
     for (var i = 0; i < stackTrace.length; i++) {
-        /* istanbul ignore next */
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var code = stackTrace[i].code;
         var pos = stackTrace[i].pos;

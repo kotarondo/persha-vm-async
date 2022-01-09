@@ -44,11 +44,9 @@ async function Global_eval(thisValue, argumentsList, direct, strict, lexEnv, var
         if (e instanceof Parser.SyntaxError) {
             throw VMSyntaxError(e.message);
         }
-        /* istanbul ignore else */
         if (e instanceof Parser.ReferenceError) {
             throw VMReferenceError(e.message);
         }
-        /* istanbul ignore next */
         throw e;
     }
     try {
@@ -69,7 +67,6 @@ async function Global_parseInt(thisValue, argumentsList) {
     var string = argumentsList[0];
     var radix = argumentsList[1];
     var inputString = await ToString(string);
-    /* istanbul ignore next */
     if ((stepsLimit -= inputString.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     var i = 0;
     while (i !== inputString.length && (isWhiteSpace(inputString[i]) || isLineTerminator(inputString[i]))) {
@@ -112,7 +109,6 @@ async function Global_parseInt(thisValue, argumentsList) {
 async function Global_parseFloat(thisValue, argumentsList) {
     var string = argumentsList[0];
     var inputString = await ToString(string);
-    /* istanbul ignore next */
     if ((stepsLimit -= inputString.length) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     var i = 0;
     while (i !== inputString.length && (isWhiteSpace(inputString[i]) || isLineTerminator(inputString[i]))) {
@@ -134,7 +130,6 @@ async function Global_isFinite(thisValue, argumentsList) {
 
 function Encode(string, unescapedSet) {
     var strLen = string.length;
-    /* istanbul ignore next */
     if ((stepsLimit -= strLen) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     var R = "";
     var k = 0;
@@ -169,7 +164,6 @@ function Encode(string, unescapedSet) {
 
 function Decode(string, reservedSet) {
     var strLen = string.length;
-    /* istanbul ignore next */
     if ((stepsLimit -= strLen) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     var R = "";
     var k = 0;
@@ -297,7 +291,6 @@ async function Global_escape(thisValue, argumentsList) {
     var string = argumentsList[0];
     var Result1 = await ToString(string);
     var Result2 = Result1.length;
-    /* istanbul ignore next */
     if ((stepsLimit -= Result2) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     var R = [];
     var k = 0;
@@ -324,7 +317,6 @@ async function Global_unescape(thisValue, argumentsList) {
     var string = argumentsList[0];
     var Result1 = await ToString(string);
     var Result2 = Result1.length;
-    /* istanbul ignore next */
     if ((stepsLimit -= Result2) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
     var R = [];
     var k = 0;
