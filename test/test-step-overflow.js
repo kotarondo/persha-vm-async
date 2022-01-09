@@ -20,7 +20,10 @@ async function test2(realm, source, filename) {
     while (steps < 10000000) {
         vm.context.stepsLimit = stepsLimit
         var { type, value } = await vm.evaluateProgram(realm, source, filename)
-        assert(type === 'throw' && String(value) === 'RangeError: steps overflow')
+        if(!(type === 'throw' && String(value) === 'RangeError: steps overflow')){
+            console.log(value)
+            assert(0)
+        }
         stepsLimit -= vm.context.stepsLimit
         steps += stepsLimit
     }

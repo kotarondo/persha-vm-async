@@ -1,1 +1,1 @@
-while(true) new Array(1000000).join();
+new Array(0xffffffff).join();
