@@ -31,7 +31,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-var maximum_parse_stack_size = 1000
+var maximum_parse_stack_size = 1000;
 
 const Parser = (function() {
     return ({

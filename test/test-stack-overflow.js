@@ -16,7 +16,7 @@ if (process.argv.length <= 2) {
 async function test2(realm, source, filename) {
     var begin = Date.now()
     var { type, value } = await vm.evaluateProgram(realm, source, filename)
-    var m = /expecting: '([^']*)'/.exec(source)
+    var m = /expect: '([^']*)'/.exec(source)
     var err = m && m[1];
     if (!(type === 'throw' && String(value) === err)) {
         console.log(filename, value)
