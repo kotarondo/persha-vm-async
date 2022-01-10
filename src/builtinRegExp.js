@@ -33,6 +33,8 @@
 
 // ECMAScript 5.1: 15.10 RegExp Objects
 
+var maximum_regexp_parse_stack_size = 1000;
+
 const RegExpFactory = (function() {
     return ({
         compile: compile,

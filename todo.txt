@@ -1,0 +1,4 @@
+stepsLimit check on RegExp.Match
+string size check on builtinString builtinJSON
+stack size check on RegExp parser
+memoryLimit
