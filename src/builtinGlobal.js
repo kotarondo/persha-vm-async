@@ -135,7 +135,11 @@ function Encode(string, unescapedSet) {
     var R = [];
     var k = 0;
     while (true) {
-        if (k === strLen) return R.join('');
+        if (k === strLen) {
+            var txt = R.join('');
+            if (txt.length > 1e6) throw VMRangeError("Invalid string length");
+            return txt;
+        }
         var C = string[k];
         if (isIncluded(C, unescapedSet)) {
             var S = C;
@@ -166,10 +170,10 @@ function Encode(string, unescapedSet) {
 function Decode(string, reservedSet) {
     var strLen = string.length;
     if ((stepsLimit -= strLen) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
-    var R = "";
+    var R = [];
     var k = 0;
     while (true) {
-        if (k === strLen) return R;
+        if (k === strLen) return R.join('');
         var C = string[k];
         if (C !== '%') {
             var S = C;
@@ -220,7 +224,7 @@ function Decode(string, reservedSet) {
                 }
             }
         }
-        var R = R + S;
+        R.push(S);
         k++;
     }
 }
