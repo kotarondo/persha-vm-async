@@ -33,6 +33,8 @@
 
 // ECMAScript 5.1: 15.5 String Objects
 
+var maximum_string_length = 1e6;
+
 async function String_Call(thisValue, argumentsList) {
     var value = argumentsList[0];
     if (argumentsList.length === 0) return "";

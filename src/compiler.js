@@ -161,36 +161,14 @@ function CompilerContext(params) {
 
 CompilerContext.prototype.compileExpression = function(expr) {
     assert(expr.compile, expr); // check if all expressions have own compilers
-    if (expr.compile) {
-        this.text("--stepsLimit;");
-        return expr.compile(this);
-    }
-    // compiler doesn't exist (under development)
-    var name = this.literal(expr);
-    return this.defineAny("await " + name + ".evaluate()");
+    this.text("--stepsLimit;");
+    return expr.compile(this);
 };
 
 CompilerContext.prototype.compileStatement = function(stmt) {
     assert(stmt.compile, stmt); // check if all statements have own compilers
-    // this.text("if(debug_stack_id!==global_debug_stack_id) assert(false," + (++debug_index) + ");");
-    if (stmt.compile) {
-        this.text("--stepsLimit;");
-        stmt.compile(this);
-        return;
-    }
-    // compiler doesn't exist (under development)
-    var name = this.literal(stmt);
-    this.text("var stmt=await " + name + ".evaluate();");
-    this.text("if(stmt.type==='return')return stmt.value;");
-    this.text("if(stmt.type==='throw')throw stmt.value;");
-    this.text("assert(stmt.target===empty,stmt);");
-    if (this.iterables) {
-        this.text("if(stmt.type==='continue')continue;");
-    }
-    if (this.iterables || this.switches) {
-        this.text("if(stmt.type==='break')break;");
-    }
-    this.text("assert(stmt.type==='normal',stmt);");
+    this.text("--stepsLimit;");
+    stmt.compile(this);
 };
 
 CompilerContext.expression = function(compile) {

@@ -137,7 +137,7 @@ function Encode(string, unescapedSet) {
     while (true) {
         if (k === strLen) {
             var txt = R.join('');
-            if (txt.length > 1e6) throw VMRangeError("Invalid string length");
+            if (txt.length > maximum_string_length) throw VMRangeError("Invalid string length");
             return txt;
         }
         var C = string[k];
@@ -302,7 +302,7 @@ async function Global_escape(thisValue, argumentsList) {
     while (true) {
         if (k === Result2) {
             var txt = R.join('');
-            if (txt.length > 1e6) throw VMRangeError("Invalid string length");
+            if (txt.length > maximum_string_length) throw VMRangeError("Invalid string length");
             return txt;
         }
         var Result6 = Result1[k];

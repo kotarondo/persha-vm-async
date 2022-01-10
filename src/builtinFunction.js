@@ -47,12 +47,12 @@ async function Function_Construct(argumentsList) {
     } else {
         var firstArg = argumentsList[0];
         var P = await ToString(firstArg);
-        var S = [ P ];
+        var S = [P];
         var ll = P.length;
         var k = 2;
         while (k < argCount) {
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
-            if (ll > 1e6) throw VMRangeError("Invalid string length");
+            if (ll > maximum_string_length) throw VMRangeError("Invalid string length");
             ll += 1;
             var nextArg = argumentsList[k - 1];
             P = await ToString(nextArg);
@@ -93,10 +93,10 @@ async function Function_prototype_toString(thisValue, argumentsList) {
         var source = func.Code.sourceObject.source;
         var codeText = source.substring(startPos, endPos);
         var txt = "function " + name + "(" + param + "){" + codeText + "}";
-    }else{
+    } else {
         var txt = "function " + name + "(){ native }";
     }
-    if (txt.length > 1e6) throw VMRangeError("Invalid string length");
+    if (txt.length > maximum_string_length) throw VMRangeError("Invalid string length");
     return txt;
 }
 

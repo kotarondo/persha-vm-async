@@ -419,7 +419,7 @@ function MultiplicativeOperator(operator, leftExpression, rightExpression) {
 
 function intrinsic_AdditionOperator(x, y) {
     var z = x + y;
-    if (typeof z === 'string' && z.length > 1e6) throw VMRangeError("Invalid string length");
+    if (typeof z === 'string' && z.length > maximum_string_length) throw VMRangeError("Invalid string length");
     return z;
 }
 
