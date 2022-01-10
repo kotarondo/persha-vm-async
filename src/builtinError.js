@@ -150,6 +150,7 @@ async function Error_prototype_toString(thisValue, argumentsList) {
     }
     if (name === "") return msg;
     if (msg === "") return name;
+    if (name.length + 2 + msg.length > 1e6) throw VMRangeError("Invalid string length");
     return name + ": " + msg;
 }
 

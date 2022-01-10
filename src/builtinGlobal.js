@@ -132,14 +132,14 @@ async function Global_isFinite(thisValue, argumentsList) {
 function Encode(string, unescapedSet) {
     var strLen = string.length;
     if ((stepsLimit -= 10 * strLen) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
-    var R = "";
+    var R = [];
     var k = 0;
     while (true) {
-        if (k === strLen) return R;
+        if (k === strLen) return R.join('');
         var C = string[k];
         if (isIncluded(C, unescapedSet)) {
             var S = C;
-            var R = R + S;
+            R.push(S);
         } else {
             if ((toCharCode(C) >= 0xDC00) && (toCharCode(C) <= 0xDFFF)) throw VMURIError();
             if ((toCharCode(C) < 0xD800) || (toCharCode(C) > 0xDBFF)) {
@@ -156,7 +156,7 @@ function Encode(string, unescapedSet) {
             for (var j = 0; j < L; j++) {
                 var jOctet = Octets[j];
                 var S = '%' + toUpperDigitChar(jOctet >> 4) + toUpperDigitChar(jOctet & 15);
-                var R = R + S;
+                R.push(S);
             }
         }
         k++;
@@ -296,7 +296,11 @@ async function Global_escape(thisValue, argumentsList) {
     var R = [];
     var k = 0;
     while (true) {
-        if (k === Result2) return R.join('');
+        if (k === Result2) {
+            var txt = R.join('');
+            if (txt.length > 1e6) throw VMRangeError("Invalid string length");
+            return txt;
+        }
         var Result6 = Result1[k];
         if (!isIncluded(Result6, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./")) {
             var x = toCharCode(Result6);

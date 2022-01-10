@@ -52,7 +52,7 @@ async function Function_Construct(argumentsList) {
         var k = 2;
         while (k < argCount) {
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
-            if (ll > 1e6) throw VMRangeError("Invalid parameter string length");
+            if (ll > 1e6) throw VMRangeError("Invalid string length");
             ll += 1;
             var nextArg = argumentsList[k - 1];
             P = await ToString(nextArg);
@@ -60,7 +60,7 @@ async function Function_Construct(argumentsList) {
             ll += P.length;
             k++;
         }
-        P = P.join();
+        P = S.join();
         var body = argumentsList[k - 1];
     }
     var body = await ToString(body);
@@ -92,9 +92,12 @@ async function Function_prototype_toString(thisValue, argumentsList) {
         var endPos = func.Code.endPos;
         var source = func.Code.sourceObject.source;
         var codeText = source.substring(startPos, endPos);
-        return "function " + name + "(" + param + "){" + codeText + "}";
+        var txt = "function " + name + "(" + param + "){" + codeText + "}";
+    }else{
+        var txt = "function " + name + "(){ native }";
     }
-    return "function " + name + "(){ native }";
+    if (txt.length > 1e6) throw VMRangeError("Invalid string length");
+    return txt;
 }
 
 async function get_Function_prototype_name(thisValue, argumentsList) {
