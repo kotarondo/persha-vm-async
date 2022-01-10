@@ -21,7 +21,7 @@ async function test2(realm, source, filename) {
         vm.context.stepsLimit = stepsLimit
         var { type, value } = await vm.evaluateProgram(realm, source, filename)
         if (!(type === 'throw' && String(value) === 'RangeError: steps overflow')) {
-            console.log(value)
+            console.log(filename, value)
             assert(0)
         }
         stepsLimit -= vm.context.stepsLimit

@@ -46,12 +46,18 @@ async function Function_Construct(argumentsList) {
         var body = argumentsList[0];
     } else {
         var firstArg = argumentsList[0];
-        var P = [await ToString(firstArg)];
+        var P = await ToString(firstArg);
+        var S = [ P ];
+        var ll = P.length;
         var k = 2;
         while (k < argCount) {
             if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
+            if (ll > 1e6) throw VMRangeError("Invalid parameter string length");
+            ll += 1;
             var nextArg = argumentsList[k - 1];
-            P.push(await ToString(nextArg));
+            P = await ToString(nextArg);
+            S.push(P);
+            ll += P.length;
             k++;
         }
         P = P.join();

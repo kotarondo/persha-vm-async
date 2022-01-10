@@ -102,8 +102,8 @@ async function Array_prototype_toLocaleString(thisValue, argumentsList) {
         // end of bug fix
     }
     var k = 1;
-    var S = [];
-    var ll = 0;
+    var S = [R];
+    var ll = R.length;
     while (k < len) {
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         if (ll > 1e6) throw VMRangeError("Invalid string length");
@@ -177,8 +177,8 @@ async function Array_prototype_join(thisValue, argumentsList) {
         var R = await ToString(element0);
     }
     var k = 1;
-    var S = [];
-    var ll = 0;
+    var S = [R];
+    var ll = R.length;
     while (k < len) {
         if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         if (ll > 1e6) throw VMRangeError("Invalid string length");

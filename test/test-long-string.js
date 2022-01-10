@@ -3,9 +3,7 @@
 // License: "BSD-3-Clause"
 
 require('./harness')
-process.chdir('step-overflow')
-
-const SCALE = 10
+process.chdir('long-string')
 
 var vm = new VM()
 
@@ -16,20 +14,12 @@ if (process.argv.length <= 2) {
 }
 
 async function test2(realm, source, filename) {
+    console.log(filename)
     var begin = Date.now()
-    var stepsLimit = SCALE * 1000 * 10000
-    vm.context.stepsLimit = stepsLimit
     var { type, value } = await vm.evaluateProgram(realm, source, filename)
-    if (!(type === 'throw' && String(value) === 'RangeError: steps overflow')) {
-        console.log(filename, value)
-        assert(0)
-    }
-    var elapsed = Date.now() - begin
-    if (elapsed > stepsLimit / 10000) {
-        console.log('elapsed:', '\x1b[31m' + elapsed + '\x1b[0m', filename)
-    } else {
-        console.log('elapsed:' + elapsed, filename)
-    }
+    if (type === 'throw' && String(value) === 'RangeError: Invalid string length') return;
+    console.log(value)
+    assert(0)
 }
 
 async function test() {
