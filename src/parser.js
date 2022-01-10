@@ -31,6 +31,8 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+var maximum_parse_stack_size = 1000
+
 const Parser = (function() {
     return ({
         readCode: readCode,
@@ -204,7 +206,7 @@ const Parser = (function() {
 
     function readFunctionBody(name, parameters, scope) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var outerStrict = strict;
             var outerCode = code;
             var outerStack = stack;
@@ -234,7 +236,7 @@ const Parser = (function() {
 
     function readSourceElements() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var pos = tokenPos;
             while (isStringLiteral) {
                 if (!(isLineSeparatedBehind || current === ';' || current === '}')) {
@@ -267,7 +269,7 @@ const Parser = (function() {
 
     function readFunctionDeclaration() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             var name = expectingIdentifier();
             expectingToken('(');
@@ -297,7 +299,7 @@ const Parser = (function() {
 
     function readStatement(labelset) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             switch (token) {
                 case '{': // '}'
                     return readBlockStatement();
@@ -354,7 +356,7 @@ const Parser = (function() {
 
     function readLabelledStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var labelset = [];
             stack.labelStack.push(labelset);
             while (isIdentifierName && current === ':') {
@@ -387,7 +389,7 @@ const Parser = (function() {
 
     function readExpressionStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var pos = tokenPos;
             var expression = readExpression();
             expectingAutoSemicolon();
@@ -397,7 +399,7 @@ const Parser = (function() {
 
     function readBlockStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             expectingToken('{');
             var statements = [];
             while (true) {
@@ -412,7 +414,7 @@ const Parser = (function() {
 
     function readVariableStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             var variableDeclarationList = readVariableDeclarationList();
             expectingAutoSemicolon();
@@ -422,7 +424,7 @@ const Parser = (function() {
 
     function readVariableDeclarationList(isNoIn) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var variableDeclarationList = [];
             while (true) {
                 var variableDeclaration = readVariableDeclaration(isNoIn);
@@ -437,7 +439,7 @@ const Parser = (function() {
 
     function readVariableDeclaration(isNoIn) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var identifier = expectingIdentifier();
             if (strict) {
                 disallowEvalOrArguments(identifier);
@@ -455,7 +457,7 @@ const Parser = (function() {
 
     function readIfStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             expectingToken('(');
             var pos = tokenPos;
@@ -471,7 +473,7 @@ const Parser = (function() {
 
     function readDoWhileStatement(labelset) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             var statement = readStatement();
             expectingToken("while");
@@ -486,7 +488,7 @@ const Parser = (function() {
 
     function readWhileStatement(labelset) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             expectingToken('(');
             var pos = tokenPos;
@@ -499,7 +501,7 @@ const Parser = (function() {
 
     function readForStatement(labelset) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             expectingToken('(');
             if (testToken("var")) {
@@ -561,7 +563,7 @@ const Parser = (function() {
 
     function readContinueStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             if (isIdentifierName && !isLineSeparatedAhead) {
                 var identifier = expectingIdentifier();
@@ -575,7 +577,7 @@ const Parser = (function() {
 
     function readBreakStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             if (isIdentifierName && !isLineSeparatedAhead) {
                 var identifier = expectingIdentifier();
@@ -589,7 +591,7 @@ const Parser = (function() {
 
     function readReturnStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             if (code.type !== "function") throw SyntaxError(prevTokenPos);
             if (!(isLineSeparatedAhead || token === ';' || token === '}')) {
@@ -603,7 +605,7 @@ const Parser = (function() {
 
     function readWithStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             if (strict) throw SyntaxError(prevTokenPos);
             expectingToken('(');
@@ -620,7 +622,7 @@ const Parser = (function() {
 
     function readSwitchStatement(labelset) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             expectingToken('(');
             var pos1 = tokenPos;
@@ -661,7 +663,7 @@ const Parser = (function() {
 
     function readThrowStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             if (isLineSeparatedAhead) throw SyntaxError(prevTokenPos);
             var pos = tokenPos;
@@ -673,7 +675,7 @@ const Parser = (function() {
 
     function readTryStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             var block = readBlockStatement();
             if (testToken("catch")) {
@@ -701,7 +703,7 @@ const Parser = (function() {
 
     function readDebuggerStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var pos = tokenPos;
             proceedToken();
             expectingAutoSemicolon();
@@ -711,7 +713,7 @@ const Parser = (function() {
 
     function readFunctionStatement() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             if (strict) throw SyntaxError(tokenPos);
             code.functions.push(readFunctionDeclaration());
             return EmptyStatement();
@@ -729,7 +731,7 @@ const Parser = (function() {
 
     function readExpression(isNoIn) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var expression = readAssignmentExpression(isNoIn);
             while (testToken(',')) {
                 var rightExpression = readAssignmentExpression(isNoIn);
@@ -741,7 +743,7 @@ const Parser = (function() {
 
     function readAssignmentExpression(isNoIn) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var expression = readConditionalExpression(isNoIn);
             var operator = token;
             switch (operator) {
@@ -773,7 +775,7 @@ const Parser = (function() {
 
     function readConditionalExpression(isNoIn) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var expression = readBinaryExpression('', isNoIn);
             if (testToken('?')) {
                 var firstExpression = readAssignmentExpression();
@@ -787,7 +789,7 @@ const Parser = (function() {
 
     function readBinaryExpression(leadingOperator, isNoIn) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var expression = readUnaryExpression();
             while (true) {
                 var operator = token;
@@ -908,7 +910,7 @@ const Parser = (function() {
 
     function readUnaryExpression() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var operator = token;
             switch (operator) {
                 case "delete":
@@ -982,7 +984,7 @@ const Parser = (function() {
 
     function readLeftHandSideExpression() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var newOperators = 0;
             while (testToken("new")) {
                 newOperators++;
@@ -1033,7 +1035,7 @@ const Parser = (function() {
 
     function readArguments() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var args = [];
             proceedToken();
             if (!testToken(')')) {
@@ -1051,7 +1053,7 @@ const Parser = (function() {
 
     function readFunctionExpression() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             proceedToken();
             if (!testToken('(')) {
                 var name = expectingIdentifier();
@@ -1088,7 +1090,7 @@ const Parser = (function() {
 
     function readPrimaryExpression() {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             if (isNumericLiteral || isStringLiteral) {
                 var expression = Literal(value);
                 proceedToken();
@@ -1168,7 +1170,7 @@ const Parser = (function() {
 
     function readPropertyAssignment(previous) {
         try {
-            if (++scopes > 400) throw SyntaxError(-1);
+            if (++scopes > maximum_parse_stack_size) throw SyntaxError(-1);
             var name = expectingPropertyName();
             if (token === ':') {
                 if (strict && isIncluded(name, previous.data)) throw SyntaxError(prevTokenPos);
