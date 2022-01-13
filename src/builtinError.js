@@ -257,9 +257,9 @@ async function get_Error_prototype_stack(thisValue, argumentsList) {
     var A = [];
     A[0] = await Error_prototype_toString(thisValue, []);
     for (var i = 0; i < stackTrace.length; i++) {
-        if ((stepsLimit -= 10) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var code = stackTrace[i].code;
         var pos = stackTrace[i].pos;
+        if ((stepsLimit -= (10 + pos)) < 0) throw new ErrorCapsule(VMRangeError("steps overflow"));
         var info = {};
         Parser.locateDebugInfo(code, pos, info);
         var finfo = info.filename + ":" + info.lineNumber + ":" + info.columnNumber;
@@ -268,5 +268,7 @@ async function get_Error_prototype_stack(thisValue, argumentsList) {
         }
         A[i + 1] = finfo;
     }
-    return A.join("\n    at ");
+    var txt = A.join("\n    at ");
+    if (txt.length > maximum_string_length) throw VMRangeError("Invalid string length");
+    return txt;
 }

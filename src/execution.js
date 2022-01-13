@@ -264,7 +264,7 @@ function getStackTrace() {
         });
         var ctx = outerExecutionContext;
         while (stackTrace.length < stackTraceLimit) {
-            stepsLimit -= 1;
+            stepsLimit -= 10;
             stackTrace.push({
                 func: ctx.runningFunction,
                 code: ctx.runningCode,
